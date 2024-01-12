@@ -1,0 +1,645 @@
+var commons = require("../../../commons/src/commons");
+const conf = commons.merge(require('../conf/unp-admin'), require('../conf/unp-admin-' + (process.env.ENVIRONMENT || 'localhost')));
+const obj = commons.obj(conf);
+const logger = obj.logger();
+const exec = require('child_process').exec;
+const utility = obj.utility();
+const util = require('util');
+const redis = new require('ioredis')(conf.redis);
+const fs = require("fs");
+
+var ssh_exec = require('node-ssh-exec');
+const shellParser = require('node-shell-parser');
+var datetime = require('node-datetime');
+
+const prom_exec = util.promisify(exec);
+
+var express = require('express');
+var router = express.Router();
+var bodyParser = require('body-parser');
+
+var requestPromise = require('request-promise-native');
+
+router.use(bodyParser.json());
+
+redis.defineCommand("ldelete", {
+  numberOfKeys: 0,
+  lua: fs.readFileSync('controller/lua-script/ldelete.lua')
+});
+
+redis.defineCommand("getmessage", {
+  numberOfKeys: 0,
+  lua: fs.readFileSync('controller/lua-script/get-message.lua')
+});
+
+redis.defineCommand("gethmunpacked", {
+  numberOfKeys: 0,
+  lua: fs.readFileSync('controller/lua-script/get-hm-unpacked.lua')
+});
+
+redis.defineCommand("ldeletebyid", {
+  numberOfKeys: 0,
+  lua: fs.readFileSync('controller/lua-script/ldeletebyid.lua')
+});
+
+router.get('/status-processes-host', async function(req, res, next) {
+  logger.debug("called status-processes-host");
+
+  var execute_process = exec("cd " + process.cwd() + '/status-machines/ && bash ./check-status-processes',
+    (error, stdout, stderr) => {
+      if (error !== null) {
+        return next({
+          type: "system_error",
+          status: 500,
+          message: {
+            "error": error,
+            "detail": stderr
+          }
+        });
+      }
+
+      let result = JSON.parse(stdout);
+      delete result[""];
+
+      next({
+        type: "ok",
+        status: 200,
+        message: result
+      });
+    });
+
+});
+
+const SHIB_IDENTITA_CF = 'Shib-Identita-CodiceFiscale';
+const SECURITY_ADMIN = "security.admin_user";
+
+router.get('/monitor', async function(req, res, next) {
+  logger.debug("called monitor");
+
+  let hosts = conf.monitoring.hosts;
+
+  let url = "http://{{host}}:" + conf.server_port + "/api/v1/status/status-processes-host";
+
+  try {
+    let res = await Promise.all(hosts.map(async function(host) {
+      try {
+        return await requestPromise({
+          headers: {
+            SHIB_IDENTITA_CF: commons.hasOwnNestedProperty(conf, SECURITY_ADMIN) ? conf.security.admin_user.user : ""
+          },
+          url: url.replace("{{host}}", host),
+          method: 'GET',
+          json: true
+        });
+      } catch (e) {
+        logger.error("Error in connection: ", e);
+        return null;
+      }
+    }));
+
+    let r = {};
+    for (let i = 0; i < hosts.length; i++) {
+      r[hosts[i]] = res[i];
+    }
+
+    next({
+      type: "ok",
+      status: 200,
+      message: r
+    });
+  } catch (e) {
+    logger.error("Error:", e);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: "error"
+    });
+  }
+
+});
+
+router.post('/host/:host/processes/:operation', async function(req, res, next) {
+
+  let host = req.params.host;
+  let operation = req.params.operation;
+  let processes = req.query.processes.split(",");
+  logger.debug("called status/host/" + req.params.host + "/processes/" + req.params.operation + " with processes: " + processes);
+
+
+  for (let process of processes) {
+    let options = {
+      headers: {
+        SHIB_IDENTITA_CF: commons.hasOwnNestedProperty(conf, SECURITY_ADMIN) ? conf.security.admin_user.user : ""
+      },
+      url: "http://" + host + ":" + conf.server_port + "/api/v1/status/" + operation + "/" + process,
+      method: 'POST',
+      json: true
+    };
+
+    try {
+      let res = await requestPromise(options);
+    } catch (e) {
+      logger.error("Error:", e);
+      return next({
+        type: "system_error",
+        status: 500,
+        message: e
+      });
+    }
+  }
+
+  logger.debug("executed all request");
+  return next({
+    type: "ok",
+    status: 200
+  });
+
+});
+
+router.post('/hosts/:process/:operation', async function(req, res, next) {
+
+  let hosts = req.query.hosts.split(",");
+  let operation = req.params.operation;
+  let process = req.params.process;
+  logger.debug("called status/hosts/" + req.params.process + "/" + req.params.operation + " with hosts: " + hosts);
+
+
+  for (let host of hosts) {
+    let options = {
+      headers: {
+        SHIB_IDENTITA_CF: commons.hasOwnNestedProperty(conf, SECURITY_ADMIN) ? conf.security.admin_user.user : ""
+      },
+      url: "http://" + host + ":" + conf.server_port + "/api/v1/status/" + operation + "/" + process,
+      method: 'POST',
+      json: true
+    };
+
+    try {
+      let res = await requestPromise(options);
+    } catch (e) {
+      logger.error("Error:", e);
+      return next({
+        type: "system_error",
+        status: 500,
+        message: e
+      });
+    }
+  }
+
+  logger.debug("executed all request");
+  return next({
+    type: "ok",
+    status: 200
+  });
+
+});
+
+router.post('/host/:host/:operation/:process', async function(req, res, next) {
+
+  let host = req.params.host;
+  logger.debug("called status/host/" + host + "/" + req.params.operation + "/" + req.params.process);
+
+  var options = {
+    headers: {
+      SHIB_IDENTITA_CF: commons.hasOwnNestedProperty(conf, SECURITY_ADMIN) ? conf.security.admin_user.user : ""
+    },
+    url: "http://" + host + ":" + conf.server_port + "/api/v1/status/" + req.params.operation + "/" + req.params.process,
+    method: 'POST',
+    json: true
+  };
+
+  try {
+    let res = await requestPromise(options);
+
+    next({
+      type: "ok",
+      status: 200
+    });
+  } catch (e) {
+    logger.error("Error:", e);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: e
+    });
+  }
+
+});
+
+
+router.post('/:operation/:process', async function(req, res, next) {
+
+  logger.debug("called status/" + req.params.operation + "/" + req.params.process);
+  let cmd = "cd " + process.cwd() + '/status-machines/ && bash ./unp-process ' + req.params.operation + " " + req.params.process;
+  logger.debug("cmd: ", cmd);
+  try {
+    var result = await prom_exec(cmd);
+
+    return next({
+      type: "ok",
+      status: 200,
+      message: result
+    });
+  } catch (e) {
+    return next({
+      type: "system_error",
+      status: 500,
+      message: {
+        "error": e
+      }
+    });
+  }
+
+});
+
+
+router.get('/redis/info', async function(req, res, next) {
+
+  try {
+
+    let result = await redis.info();
+    result = result.split("\r\n").filter(e => e.indexOf(":") !== -1).map(e => {
+      let r = {};
+      r[e.split(":")[0]] = e.split(":")[1];
+      return r;
+    }).reduce((r, e) => {
+      r[Object.keys(e)[0]] = e[Object.keys(e)[0]];
+      return r;
+    }, {});
+    return next({
+      type: "ok",
+      status: 200,
+      message: result
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+
+});
+
+router.get('/process/:pid/status', async function(req, res, next) {
+
+  let pid = req.params.pid;
+  let server = req.query.host;
+  logger.debug("called process/" + pid + "/status with host:", server);
+
+
+  let host = server;
+
+  var config = {
+      host: host,
+      username: "unp",
+      password: "unp"
+    },
+    command = "ps aux | grep '" + pid + "\\|USER' | grep -v 'grep'";
+
+  ssh_exec(config, command, function(error, response) {
+    if (error) {
+      logger.error("Error:", error);
+      return next({
+        type: "system_error",
+        status: 500,
+        message: {
+          "error": error
+        }
+      });
+    }
+
+    command = "ps -o etimes= -p " + pid;
+    ssh_exec(config, command, function(error, etimes) {
+      if (error) {
+        logger.error("Error:", error);
+        return next({
+          type: "system_error",
+          status: 500,
+          message: {
+            "error": error
+          }
+        });
+      }
+
+      logger.debug("etimes: ", etimes);
+      logger.debug("response: ", response);
+
+      let process = shellParser(response)[0];
+      if (typeof process !== 'object') return next({
+        type: "system_error",
+        status: 500,
+        message: "response from script is not a json"
+      });
+      logger.debug("process parsed: ", JSON.stringify(process, null, 4));
+
+      process.PID = (process.USER.match(/[0-9]+/g) || "") + process.PID + "";
+      process.USER = process.USER.match(/[A-Za-z]+/g) + "";
+      let memVszSplitted = process['%MEM'].split(" ");
+      if (memVszSplitted.length > 1) {
+        process['%MEM'] = memVszSplitted[0];
+        process['VSZ'] = memVszSplitted[1] + process.VSZ;
+      }
+      let VSZRSSSplitted = process.VSZ.split(" ");
+      if (VSZRSSSplitted.length > 1) {
+        process.VSZ = VSZRSSSplitted[0];
+        process.RSS = VSZRSSSplitted[1] + process.RSS;
+      }
+      process.memory_usage = parseInt(process.RSS / 1024) + "M";
+      let date;
+      var days = Math.floor(etimes / (3600 * 24));
+      var hours = Math.floor(etimes % (3600 * 24) / 3600);
+      var minutes = Math.floor(etimes % 3600 / 60);
+      var seconds = Math.floor(etimes % 60);
+
+      process.uptime = days + "d " + hours + "h " + minutes + "m " + seconds + "s";
+      return next({
+        type: "ok",
+        status: 200,
+        message: process
+      });
+    });
+
+  });
+});
+
+
+router.get('/:host/status', async function(req, res, next) {
+
+  let server = req.params.host;
+  logger.debug("called status/" + server + "/status");
+
+  let host = server;
+
+  let config = {
+    host: host,
+    username: "unp",
+    password: "unp"
+  };
+
+  let commands = [{
+      parameter: "memory",
+      command: "free -m",
+      parse_result_function: function(response) {
+        var final_result = {};
+        final_result.mem = response[0];
+        final_result.swap = response[1];
+
+        final_result.mem.total = final_result.mem.total.match(/[0-9]+/g)[0];
+        final_result.swap.total = final_result.swap.total.match(/[0-9]+/g)[0];
+
+        return final_result;
+      }
+    },
+    {
+      parameter: "disk",
+      command: "df -h"
+    }
+  ];
+
+  let ssh_exec_prom = util.promisify(ssh_exec);
+
+  var total_result = {};
+
+  for (var command of commands) {
+    try {
+      let response = await ssh_exec_prom(config, command.command);
+      let result = command.parse_result_function ? command.parse_result_function(shellParser(response)) : shellParser(response);
+      total_result[command.parameter] = result;
+    } catch (error) {
+      logger.error("Error:", error);
+      return next({
+        type: "system_error",
+        status: 500,
+        message: {
+          "error": error
+        }
+      });
+    }
+  }
+
+  logger.debug("commmands: ", JSON.stringify(total_result, null, 4))
+  return next({
+    type: "ok",
+    status: 200,
+    message: total_result
+  });
+
+});
+
+
+router.get('/redis/queues', async function(req, res, next) {
+  
+  let queues = {
+    "mb:queues:events:events":1,
+    "mb:queues:messages:mex":1,
+    "mb:queues:messages:sms":1,
+    "mb:queues:messages:email":1,
+    "mb:queues:messages:push":1,
+    "mb:queues:messages:io":1,
+    "mb:queues:audit:audit":1,
+  }
+
+  Object.keys(queues).forEach( k => queues[k + "_priority"] = 0);
+  Object.keys(queues).filter(k => !k.includes("priority")).forEach( k => queues[k + "_bulk"] = 100);
+  Object.keys(queues).filter(k => !k.includes("bulk")).forEach( k => k.includes("priority")? queues[k + ":to_be_retried"] = 0:queues[k + ":to_be_retried"] = 1);
+  try {
+    var result = {};
+    await Promise.all(Object.keys(queues).map(async function(queue) {
+      let zcount = await redis.zcount(queue.replace("_priority","").replace("_bulk",""),queues[queue],queues[queue]);
+      result[queue] = zcount;
+      return result;
+    }));
+
+    return next({
+      type: "ok",
+      status: 200,
+      message: result
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+router.get('/redis/queues/:queue_name', async function(req, res, next) {
+  logger.debug("/redis/queues/%s", req.params.queue_name);
+  try {
+    let queue_name = req.params.queue_name.replace("_priority","").replace("_bulk","");
+    let score = 1;
+    if(req.params.queue_name.includes("priority")) score = 0;
+    if(req.params.queue_name.includes("bulk")) score = 100;
+    let result = await redis.getmessage(queue_name, 100,score);
+    logger.debug("queues response: ", result);
+    
+    return next({
+      type: "ok",
+      status: 200,
+      message: result
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+router.get('/redis/hm', async function(req, res, next) {
+  
+  let queues = ["mb:coda:queues:messages", "mb:counter:queues:messages"];
+
+  try {
+    var result = await Promise.all(queues.map(async function(queue) {
+      return await redis.gethmunpacked(queue);
+    }));
+    let r = {};
+    for (let i = 0; i < queues.length; i++) {
+      try {
+        r[queues[i]] = JSON.parse(result[i]);
+      } catch (e) {
+        r[queues[i]] = result[i];
+      }
+    }
+
+    return next({
+      type: "ok",
+      status: 200,
+      message: r
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+router.get('/redis/hm/length', async function(req, res, next) {
+  
+  let queues = ["mb:coda:queues:messages", "mb:counter:queues:messages"];
+
+  try {
+    var result = await Promise.all(queues.map(async function(queue) {
+      return await redis.hlen(queue);
+    }));
+    let r = {};
+    for (let i = 0; i < queues.length; i++) r[queues[i]] = result[i];
+
+    return next({
+      type: "ok",
+      status: 200,
+      message: r
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+router.get('/redis/keys/:key', async function(req, res, next) {
+  logger.debug("called /redis/keys/", req.params.key);
+  try {
+    let type = await redis.type(req.params.key);
+    let result;
+    switch (type) {
+      case 'hash':
+        result = await redis.hgetall(req.params.key);
+        break;
+      case 'list':
+        result = await redis.lrange(req.params.key, 0, -1);
+        break;
+    }
+    return next({
+      type: "ok",
+      status: 200,
+      message: result
+    });
+  } catch (err) {
+    logger.error("error in get key: ", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+router.get('/redis/hm/:queue', async function(req, res, next) {
+  logger.debug("called /status/redis/hm");
+  let queue = req.params.queue;
+  try {
+    var result = await redis.gethmunpacked(queue);
+
+    return next({
+      type: "ok",
+      status: 200,
+      message: result
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+router.delete('/redis/queues/:queue_name/message/:uuid', async function(req, res, next) {
+  logger.debug("called DELETE /redis/queues/:queue_name/message");
+  let uuid = req.params.uuid;
+  let queue_name = req.params.queue_name;
+
+  try {
+    let result = await redis.ldelete(queue_name, uuid);
+    return next({
+      type: "ok",
+      status: 200,
+      message: result + ""
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+
+router.delete('/redis/queues/messages/:id', async function(req, res, next) {
+  logger.debug("called DELETE /redis/queues/messages/ " + req.params.id);
+
+  try {
+    let resultDel = await redis.ldeletebyid(req.params.id);
+    return next({
+      type: "ok",
+      status: 200,
+      message: resultDel
+    });
+  } catch (err) {
+    logger.debug("error:", err);
+    return next({
+      type: "system_error",
+      status: 500,
+      message: err
+    });
+  }
+});
+
+module.exports = router;

@@ -1,0 +1,312 @@
+<html>
+<base href=".">
+<head>
+    <link rel="icon" href="./images/notify.png" type="image/gif" sizes="16x16">
+</head>
+<script src="./bower_components/angular/angular.min.js"></script>
+<link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css"/>
+<link rel="stylesheet" href="./css/custom.css"/>
+<link rel="stylesheet" href="./css/components.css"/>
+<script src="./bower_components/jquery/dist/jquery.min.js"></script>
+<script src="./bootstrap/js/bootstrap.min.js"></script>
+<script src="./bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="./bower_components/ngclipboard/dist/ngclipboard.min.js"></script>
+<script src="./bower_components/clipboard/dist/clipboard.min.js"></script>
+<script src="./bower_components/angular-file-saver/dist/angular-file-saver.bundle.min.js"></script>
+<script src="./bower_components/angular-sanitize/angular-sanitize.js"></script>
+<script src="./bower_components/angular-spinner/dist/angular-spinner.min.js"></script>
+<link rel="stylesheet" type="text/css" href="./bower_components/ng-prettyjson/dist/ng-prettyjson.min.css">
+<script type="text/javascript" src="./bower_components/ng-prettyjson/dist/ng-prettyjson.min.js"></script>
+<script type="text/javascript" src="./bower_components/ng-prettyjson/src/ace.js" charset="utf-8"></script>
+<script type="text/javascript" src="./bower_components/checklist-model/checklist-model.js" charset="utf-8"></script>
+<script type="text/javascript" src="./bower_components/angular-jwt/dist/angular-jwt.min.js" charset="utf-8"></script>
+
+<script type='text/javascript' src="./lib/aes.js"></script>
+<script type='text/javascript' src="./lib/mdo-angular-cryptography.js"></script>
+<!--script-- src="../bower_components/ng-resource/dist/ng-resource.min.js"></script-->
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<!--script src="../../assets/js/ie10-viewport-bug-workaround.js"></script-->
+
+<script>
+    var root = null;
+    var app = angular.module("app", ['ui.bootstrap', 'ngclipboard', 'ngSanitize', 'ngPrettyJson', 'checklist-model', 'angularSpinner', 'angular-jwt', 'mdo-angular-cryptography', 'ngFileSaver']).run(function ($rootScope, $http,$window) {
+        new Clipboard('.btn');
+
+        $rootScope.Utils = {
+            keys: Object.keys
+        }
+        $rootScope.isEmptyObject = function (item) {
+            return angular.equals({}, item);
+        }
+
+        $rootScope.logout = function logout() {
+            delete $rootScope.user;
+            $http.post("api/v1/user/logout").then((reply) => {
+                alert("successfully logged out");
+                $window.location.href = $rootScope.logout_url;
+            });
+        }
+
+        $rootScope.from_begin_year = function () {
+            var current = new Date();
+            var previous = new Date(current.getFullYear(), 0, 1);
+
+            return Math.ceil((current.getTime() - previous.getTime()) / 86400000) - 1;
+        }
+
+        root = $rootScope;
+
+
+    });
+
+    app.config(['$locationProvider', function ($locationProvider) {
+        $locationProvider.html5Mode(true);
+    }]);
+
+    app.config(['$httpProvider', function ($httpProvider) {
+        $httpProvider.interceptors.push(function ($q) {
+            let eccezioni = ["api/v1/status/redis/info","api/v1/status/redis/queues","api/v1/status/redis/hm/length", "api/v1/status/monitor"];
+            return {
+                'request': function (config) {
+                    if (!eccezioni.includes(config.url)) root.spinner = !root.spinner || root.spinner === null?root.spinner =1 : root.spinner + 1;
+                    return config;
+                },
+
+                'response': function (response) {
+                    if (!eccezioni.includes(response.config.url)) root.spinner--;
+                    return response;
+                },
+                'responseError': function (response) {
+                    if (!eccezioni.includes(response.config.url)) root.spinner--;
+                    return $q.reject(response);
+                },
+                'requestError': function (config,rejection) {
+                    if (!eccezioni.includes(config.url)) root.spinner--;
+                    return $q.reject(rejection);
+                }
+            };
+        });
+
+    }]);
+
+    /*app.config(['usSpinnerConfigProvider', function (usSpinnerConfigProvider) {
+        usSpinnerConfigProvider.setDefaults({color: 'blue'});
+    }]);*/
+
+    app.directive('fileModel', ['$parse', function ($parse) {
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs) {
+                var model = $parse(attrs.fileModel);
+                var modelSetter = model.assign;
+
+                element.bind('change', function() {
+                    scope.$apply(function() {
+                        modelSetter(scope, element[0].files[0]);
+                    });
+                });
+            }
+        };
+    }]);
+
+    app.directive('ddTextCollapse', ['$compile', function ($compile) {
+
+        return {
+            restrict: 'A',
+            scope: true,
+            link: function (scope, element, attrs) {
+
+                // start collapsed
+                scope.collapsed = false;
+
+                // create the function to toggle the collapse
+                scope.toggle = function () {
+                    scope.collapsed = !scope.collapsed;
+                };
+
+                // wait for changes on the text
+                attrs.$observe('ddTextCollapseText', function (text) {
+
+                    // get the length from the attributes
+                    var maxLength = scope.$eval(attrs.ddTextCollapseMaxLength);
+
+                    if (text.length > maxLength) {
+                        // split the text in two parts, the first always showing
+                        var firstPart = String(text).substring(0, maxLength);
+                        var secondPart = String(text).substring(maxLength, text.length);
+
+                        // create some new html elements to hold the separate info
+                        var firstSpan = $compile('<span>' + firstPart + '</span>')(scope);
+                        var secondSpan = $compile('<span ng-if="collapsed">' + secondPart + '</span>')(scope);
+                        var moreIndicatorSpan = $compile('<span ng-if="!collapsed">... </span>')(scope);
+                        var lineBreak = $compile('<br ng-if="collapsed">')(scope);
+                        var toggleButton = $compile('<span class="collapse-text-toggle" ng-click="toggle()">{{collapsed ? "less" : "more"}}</span>')(scope);
+
+                        // remove the current contents of the element
+                        // and add the new ones we created
+                        element.empty();
+                        element.append(firstSpan);
+                        element.append(secondSpan);
+                        element.append(moreIndicatorSpan);
+                        element.append(lineBreak);
+                        element.append(toggleButton);
+                    }
+                    else {
+                        element.empty();
+                        element.append(text);
+                    }
+                });
+            }
+        };
+    }]);
+
+    function isEmpty(x) {
+        if (!x) return true;
+        if (x.length && x.trim && x.trim().length == 0) return true;
+
+        if (typeof(x) == 'string') return false;
+
+        if (x instanceof Date) return false;
+
+        if (Object.keys(x).length == 0) return true;
+
+        return false;
+    }
+
+    function semplify(filter) {
+        for (var f in filter) {
+            for (var op in filter[f])
+                if (isEmpty(filter[f][op])) delete filter[f][op];
+            if (isEmpty(filter[f])) delete filter[f];
+        }
+        return filter;
+    }
+
+    function uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    function getDateFormatted(date) {
+
+        return date.getFullYear() + '-' +
+            (date.getMonth() + 1) + '-' +
+            date.getDate() + ' ' +
+            date.getHours() + ':' +
+            date.getMinutes() + ':' +
+            date.getSeconds()
+    }
+
+    function isObject(item) {
+        return (item && typeof item === 'object' && !Array.isArray(item));
+    }
+
+
+
+</script>
+<script src="./menu.js"></script>
+<script src="preferences-service.js"></script>
+<script src="client.js"></script>
+<script src="clients.js"></script>
+<script src="events.js"></script>
+<script src="preferences-services.js"></script>
+<script src="mex.js"></script>
+<script src="users.js"></script>
+<script src="add-user.js"></script>
+<script src="audit.js"></script>
+<script src="server-status.js"></script>
+<script src="redis-status.js"></script>
+<script src="statistic-events.js"></script>
+<script src="user-shibboleth-config.js"></script>
+<script src="home.js"></script>
+<script src="utilities.js"></script>
+<script src="preferences-console.js"></script>
+<script src="templates.js"></script>
+<script src="blacklist.js"></script>
+
+<body ng-app="app" ng-controller="menu">
+<nav class="navbar navbar-inverse navbar-fixed-top row">
+    <div class="col-sm-3">
+        <a class="img-responsive logo pull-left" href="#" ng-click="go('home')"><img src="./images/notify.png"
+                                                                                     height="83" width="90"></a>
+        <a style="padding-top: 35px;font-size: 18px" class="navbar-brand" href="#" ng-click="go('home')"><i class="glyphicon glyphicon-home"></i> Console di
+               {{env.ENVIRONMENT}}</a>
+    </div>
+
+    <div class="container col-sm-7">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+
+            <ul class="nav navbar-nav" style="padding-top: 20px;font-size: 14px">
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('preferences-services')}"><a href=""
+                                                                              ng-click="go('preferences-services')">Services</a>
+                </li>
+                <!--li ng-class="{ active: isActive('clients')}"><a href="" ng-click="go('clients')">Clients</a></li-->
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('users')}"><a href="" ng-click="go('users')">Users</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('events')}"><a href="" ng-click="go('events')">Events</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('audit')}"><a href="" ng-click="go('audit')">Audit</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('mex')}"><a href="" ng-click="go('mex')">Messages</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('operation') )" ng-class="{ active: isActive('server-status')}"><a href="" ng-click="go('server-status')">Server</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('operation') )" ng-class="{ active: isActive('redis-status')}"><a href="" ng-click="go('redis-status')">Redis</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('statistic-events')}"><a href="" ng-click="go('statistic-events')">Statistic</a>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('preferences-console')}"><a href="" ng-click="go('preferences-console')">Preferences</a>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('utilities')}"><a href="" ng-click="go('utilities')">Utilities</a>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('templates')}"><a href="" ng-click="go('templates')">Templates</a>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('blacklist')}"><a href="" ng-click="go('blacklist')">Blacklist</a>
+                </li>
+            </ul>
+
+        </div><!--/.nav-collapse -->
+
+    </div>
+    <div id="navbar2" class="collapse navbar-collapse col-sm-2">
+
+        <div class="pull-right">
+            <ul ng-show="user !==''" class="nav navbar-nav pull-right" style="padding-top: 20px;font-size: 15px">
+                <li class="dropdown"><a href="" class="dropdown-toggle" data-toggle="dropdown"><i class="glyphicon glyphicon-user"></i> {{user.name}} {{user.surname}}<b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li ng-show="user.roles.includes('admin')" ng-click="go('user-shibboleth-config')"><a href=""><i class="glyphicon glyphicon-cog"></i> Config</a></li>
+                        <!--li><a href="/help/support"><i class="icon-envelope"></i> Contact Support</a></li-->
+                        <li class="divider"></li>
+                        <li ng-click="logout()"><a href=""><i class="glyphicon glyphicon-off"></i> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+</nav>
+
+<div class="container" style="padding-top: 50px;">
+
+    <div ng-show="$root.spinner >= 1" spinner-key="spinner-1" style="background: #0c0c0c;
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    z-index: 100000;
+    opacity: 0.7;">
+        <span us-spinner="{radius:30, width:8, length: 16,color: 'white'}"></span>
+        <div style = "color: white;width: 100%;position: absolute;top: 90%;text-align: center;">requests to server: {{$root.spinner}}</div>
+    </div>
+    <div ng-include="currentPage">
+
+    </div>
+
+</div><!-- /.container -->
+
+
+</body>
+</html>

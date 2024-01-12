@@ -1,0 +1,33 @@
+
+<div class="col-sm-12" ng-controller="clients">
+    <button class="btn btn-primary" ng-click="go('client', {client_id:uuid()})">Add Client</button>
+    <button class="btn btn-primary" ng-click="createReport()">Create Report</button>
+
+    <br><br>
+    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'" role="alert"  >
+        <span data-ng-bind-html="resultMessage"></span>
+    </div>
+
+
+    <table class=" table table-striped table-responsive table-hover">
+        <thead>
+        <tr>
+            <th>client_name</th>
+            <th>reference_email</th>
+            <th>product</th>
+            <th>subscription date</th>
+            <th>notes</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr ng-repeat="e in list">
+            <td><a href="" ng-click="go('client', {client_id:e.client_id})">{{e.client_name}}</a></td>
+            <td>{{e.reference_email}}</td>
+            <td>{{e.product}}</td>
+            <td>{{e.subscription_date | date:'dd/MM/yyyy hh:mm:ss'}}</td>
+            <td dd-text-collapse dd-text-collapse-max-length="60" dd-text-collapse-text="{{e.notes}}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>

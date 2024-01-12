@@ -1,0 +1,31 @@
+<div class="col-sm-12" ng-controller="preferences-services">
+    <button class="btn btn-primary" ng-click="go('client', {service_uuid:uuid()})">Add Service</button>
+
+    <br><br>
+    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'" role="alert">
+        <span data-ng-bind-html="resultMessage"></span>
+    </div>
+
+    <input class="form-control"  type="text" ng-model="f" placeholder="filter ...">
+
+    <table class=" table table-striped table-responsive table-hover">
+        <thead style = "text-transform: uppercase;">
+        <tr>
+            <th>uuid</th>
+            <th>service_name</th>
+            <th>channels</th>
+            <th>tags</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr ng-repeat="e in list | filter:f">
+            <td ng-attr-title ="{{e.uuid}}">{{e.uuid.substring(0,8)}}</td>
+            <td><a href="" ng-click="go('client', {service_uuid:e.uuid})">{{e.name}}</a></td>
+            <td>{{e.channels}}</td>
+            <td>{{e.tags}}</td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>

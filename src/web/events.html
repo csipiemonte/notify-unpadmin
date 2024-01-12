@@ -1,0 +1,198 @@
+<div class="col-sm-12" ng-controller="events">
+
+
+    <!--input class =" form-control" type="text" id="searchNames" placeholder="Search for client names.." title="Type in a name"-->
+
+    <table class="table">
+        <tr>
+            <th class="text-right">
+                Msg uuid
+            </th>
+            <td>
+                <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
+                       placeholder="message uuid" ng-model="params.filter.msg_uuid.eq">
+            </td>
+
+            <th class="text-right">
+                Bulk ID
+            </th>
+            <td>
+                <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
+                       placeholder="bulk id" ng-model="params.filter.bulk_id.ci">
+
+            </td>
+
+            <th class="text-right">
+                User_id
+            </th>
+            <td>
+                <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
+                       placeholder="user id" ng-model="params.filter.user_id.eq">
+
+            </td>
+
+            <th class="text-right">
+                Payload
+            </th>
+            <td>
+                <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
+                       placeholder="payload" ng-model="params.filter.payload.ci">
+
+            </td>
+        </tr>
+        <tr>
+            <th class="text-right">
+                Date
+            </th>
+            <td>
+                <input type="datetime-local" class="form-control"
+                       ng-model="params.filter.created_at.gte"/>
+                <input type="datetime-local" class="form-control"
+                       ng-model="params.filter.created_at.lte"/>
+
+            </td>
+
+            <th class="text-right">
+                Source
+            </th>
+            <td>
+                <select class="form-control" ng-model="params.filter.source.eq"
+                        ng-options="source for source in sources">
+                    <option value="">(source)</option>
+                </select>
+            </td>
+
+
+            <th class="text-right">
+                Type
+            </th>
+            <td>
+                <select class="form-control" ng-model="params.filter.type.eq" ng-options="type for type in types">
+                    <option value="">(type)</option>
+                </select>
+            </td>
+        </tr>
+
+    </table>
+
+    <div class="col-sm-12" style="margin-top:10px;">
+        <button class="btn btn-primary" ng-click="set_dates(1e4, 0)">all</button>
+        <button class="btn btn-primary" ng-click="set_dates(0, 0)">today</button>
+        <button class="btn btn-primary" ng-click="set_dates(1, 1)">yesterday</button>
+        <button class="btn btn-primary" ng-click="set_dates(7, 0)">last 7 days</button>
+        <button class="btn btn-primary" ng-click="set_dates(30, 0)">last 30 days</button>
+        <button class="btn btn-primary" ng-click="set_dates(from_begin_year(), 0)">this year</button>
+        <button class="btn btn-primary" ng-click="set_dates(1e4,7)">older than 7 days</button>
+        <button class="btn btn-primary" ng-click="set_dates(1e4,30)">older than 30 days</button>
+    </div>
+
+
+    <!--button class="btn btn-primary" ng-click="createReport()">Create Report</button-->
+
+
+    <div class="col-sm-12" style="margin-top:10px;">
+        <button class="btn btn-success" ng-click="search()">search</button>
+        <button class="btn btn-danger" ng-click="delete()">delete</button>
+
+        <button class="btn btn-warning" ng-click="clear()">Clear</button>
+
+
+        <button class="btn btn-info" ng-click="createReportCSV()">CSV</button>
+        <button class="btn btn-info" ng-click="createReportExcel()">Excel</button>
+
+        record: {{total_elements | number}}
+    </div>
+    <br><br>
+    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger' " role="alert">
+        {{resultMessage}}
+    </div>
+
+    <table class="table table-responsive table-hover">
+        <thead style="text-transform: uppercase;">
+        <tr>
+            <th>id</th>
+            <th>created_at</th>
+            <th>description</th>
+            <th>source</th>
+            <th>type</th>
+            <th>bulk_id</th>
+            <th>user_id</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr ng-class="e.error? 'bg-danger':''" ng-repeat="e in events">
+
+            <td>{{e.id}}</td>
+            <td>{{e.created_at | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+            <td dd-text-collapse dd-text-collapse-max-length="60" dd-text-collapse-text="{{e.description}}"></td>
+            <td>{{e.source}}</td>
+            <td>{{e.type}}</td>
+            <td>{{e.bulk_id}}</td>
+            <td><a href="" ng-click="go('users',{user_id: e.user_id})">{{e.user_id}}</a></td>
+            <td>
+                <button ng-show="e.payload === 0" class="btn btn-primary btn-sm" ng-click="getPayload(e.id)">Payload
+                </button>
+                <!--button ng-show="event.source.includes('unpadmin')" type="button"  class="btn btn-default btn-sm col-sm-2">Download</button-->
+                <button ng-show="e.me_payload" class="btn btn-primary btn-sm" data-toggle="modal"
+                        data-target="#token-modal" ng-click="openModal('Message',e.me_payload,e)">Mex
+                </button>
+                <button ng-show="e.error" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#token-modal"
+                        ng-click="openModal('Error',e.error,e)">Error
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="row">
+        <div class="col-sm-2">
+            <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="choose(1)"><<</button>
+            <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="prec()"><</button>
+        </div>
+        <div class="col-sm-3 text-center">{{currentPage | number}} di {{totalPages | number}}</div>
+        <div class="col-sm-2">
+            <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="succ()">></button>
+            <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="choose(totalPages)">>>
+            </button>
+        </div>
+    </div>
+
+
+    <div id="token-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                    </button>
+                    <div class="row">
+                        <h4 class="modal-title col-sm-4"><b>{{title}}</b></h4>
+                    </div>
+                </div>
+                <form name="tokenForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <pre pretty-json="mex"></pre>
+                        </div>
+
+                        <div class="container">
+
+                            <div ng-show="showDivMessagge" class="alert alert-trim"
+                                 ng-class="success? 'alert-success':'alert-danger'" role="alert">
+                                <span data-ng-bind-html="resultMessage"></span>
+                            </div>
+                        </div>
+                        <button ng-show="title === 'Message'" type="button" ng-click="go('mex',{mex_id: mex.id})"
+                                class="btn btn-secondary" data-dismiss="modal">Go to Messages
+                        </button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

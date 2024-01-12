@@ -1,0 +1,236 @@
+<div class="col-sm-12" ng-controller="preferences_console">
+    <br><br>
+    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'" role="alert">
+        <span data-ng-bind-html="resultMessage"></span>
+    </div>
+
+    <br>
+    <div>
+        <table class=" table table-striped table-responsive table-hover">
+            <thead style="text-transform: uppercase;">
+            <tr>
+                <th>service_name</th>
+                <th>sottoscrittori</th>
+                <th>push</th>
+                <th>email</th>
+                <th>sms</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(property, value) in services">
+                <td>{{property}}</td>
+                <td><a href="" ng-click="params.filter['us.service_name']= {eq : property};params.filter['us.channels'] = undefined;getUsersFromServices(property,'')">{{value.mex}}</a></td>
+                <td><a href="" ng-click="params.filter['us.service_name']= {eq : property};params.filter['us.channels'] = {ci : 'push'};getUsersFromServices(property,'push')">{{value.push}}</a></td>
+                <td><a href="" ng-click="params.filter['us.service_name']= {eq : property};params.filter['us.channels'] = {ci : 'email'};getUsersFromServices(property,'email')">{{value.email}}</a></td>
+                <td><a href="" ng-click="params.filter['us.service_name']= {eq : property};params.filter['us.channels'] = {ci : 'sms'};getUsersFromServices(property,'sms')">{{value.sms}}</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <br><br>
+    <div ng-show="users">
+        <div class="text-center">
+            <h4><b>{{users_service_name}} <br><br>{{users_channel}}</b></h4>
+        </div>
+        <br><br>
+        <div>
+            <table class="table">
+                <tr>
+                    <th class="text-right">
+                        User ID
+                    </th>
+                    <td>
+                        <input class="form-control" ng-keypress="$event.which===13 && getUsersFromServices()"
+                               type="text"
+                               ng-model="params.filter['u.user_id'].eq">
+                    </td>
+                    <th class="text-right">
+                        Email
+                    </th>
+                    <td>
+                        <input class="form-control" ng-keypress="$event.which===13 && getUsersFromServices()"
+                               type="text"
+                               ng-model="params.filter.email.ci">
+                    </td>
+
+                    <th class="text-right">
+                        SMS
+                    </th>
+                    <td>
+                        <input class="form-control" ng-keypress="$event.which===13 && getUsersFromServices()"
+                               type="text"
+                               ng-model="params.filter.sms.eq">
+                    </td>
+
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>
+                        <button class="btn btn-primary pull-right" ng-click="getUsersFromServices()">search users
+                        </button>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+        <table class="table">
+            <thead style="text-transform: uppercase;">
+            <tr>
+                <th>user id</th>
+                <th>email</th>
+                <th>sms</th>
+                <th>push</th>
+                <th>terms</th>
+                <th>contacts history</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="us in users| filter:f">
+                <td ng-click="go('users',{user_id: us.user_id})"><a href="">{{us.user_id}}</a></td>
+                <td>{{us.email}}</td>
+                <td>{{us.sms}}</td>
+                <td dd-text-collapse dd-text-collapse-max-length="10" dd-text-collapse-text="{{us.push}}"></td>
+                <td data-toggle="modal"
+                    data-target="#terms-modal" ng-click="openTermsModal(us.user_id)"><i
+                        class="glyphicon glyphicon-list-alt"></i></td>
+                <td data-toggle="modal"
+                    data-target="#user-modal" ng-click="openHistoryModal(us.user_id)"><i class="glyphicon glyphicon-list-alt"></i></td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="row">
+            <div class="col-sm-2">
+                <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="choose(1)"><<</button>
+                <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="prec()"><</button>
+            </div>
+            <div class="col-sm-3 text-center">{{currentPage | number}} di {{totalPages | number}}</div>
+            <div class="col-sm-2">
+                <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="succ()">></button>
+                <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="choose(totalPages)">>>
+                </button>
+            </div>
+            record: {{total_elements | number}}
+        </div>
+
+    </div>
+
+    <div id="terms-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h3 class="modal-title col-sm-12"><b>Current accepted Terms</b></h3>
+                            <br><br>
+                            <table class="table">
+                                <thead style="text-transform: uppercase;">
+                                <tr>
+                                    <th>user id</th>
+                                    <th>accepted at</th>
+                                    <th>hashed terms</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>{{terms.terms.user_id}}</td>
+                                    <td>{{terms.terms.accepted_at | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+                                    <td>{{terms.terms.hashed_terms}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h3 class="modal-title col-sm-12"><b>Terms history</b></h3>
+                            <br><br>
+                            <table class="table">
+                                <thead style="text-transform: uppercase;">
+                                <tr>
+                                    <th>user id</th>
+                                    <th>accepted at</th>
+                                    <th>hashed terms</th>
+                                    <th>timestamp</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="ht in terms.history_terms">
+                                    <td>{{ht.user_id}}</td>
+                                    <td>{{ht.accepted_at | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+                                    <td>{{ht.hashed_terms}}</td>
+                                    <td>{{ht.timestamp | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="user-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h4 class="modal-title text-center col-sm-12"><b>History of {{users_history[0].user_id}}</b></h4>
+                            <br><br><br>
+                            <table class="table">
+                                <thead style="text-transform: uppercase;">
+                                <tr>
+                                    <th>email</th>
+                                    <th>sms</th>
+                                    <th>push</th>
+                                    <th>phone</th>
+                                    <th>language</th>
+                                    <th>interests</th>
+                                    <th>timestamp</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="ht in users_history">
+                                    <td>{{ht.email}}</td>
+                                    <td>{{ht.sms}}</td>
+                                    <td dd-text-collapse dd-text-collapse-max-length="10" dd-text-collapse-text="{{ht.push}}"></td>
+                                    <td>{{ht.phone}}</td>
+                                    <td>{{ht.language}}</td>
+                                    <td>{{ht.interests}}</td>
+                                    <td>{{ht.timestamp | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+

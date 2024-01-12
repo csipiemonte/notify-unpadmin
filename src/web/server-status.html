@@ -1,0 +1,153 @@
+<div class="col-sm-12" ng-controller="server-status">
+
+    <div class="container">
+        <table style="font-family: monospace;" class="table table-striped table-responsive table-hover">
+            <thead style="text-transform: uppercase;">
+            <tr>
+                <th>Command</th>
+                <th>Process</th>
+                <th  ng-repeat="host in hosts">
+                    <div style="cursor: pointer;" ng-click="openHostModal(host)" data-toggle="modal"
+                         data-target="#token-host-modal">{{host}}</div>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            ng-click="executeOperationOnHost('start',host)">Start
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            ng-click="executeOperationOnHost('stop',host)">Stop
+                    </button>
+                </th>
+
+                <!--th ng-repeat="host in hosts">{{host}}
+                </th-->
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="(p,v) in unp_server_status">
+                <td>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            ng-click="executeOperationOnProcess('start',p)">Start
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            ng-click="executeOperationOnProcess('stop',p)">Stop
+                    </button>
+                </td>
+                <td>{{p}}</td>
+                <td style="cursor: pointer;" ng-click="openModal(p,host,v[host])" data-toggle="modal"
+                    data-target="#token-modal" ng-repeat="host in hosts">
+                    <div ng-class="v[host] != '' ?'text-success':'text-danger'">
+                        <span ng-class="v[host] != ''?' glyphicon glyphicon-ok':' glyphicon glyphicon-alert'"></span>
+                        <span>{{v[host]}}</span>
+                    </div>
+                </td>
+
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="token-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><br>Host: {{actionProcess.host}}
+                        <br>Process: {{actionProcess.process}}
+                        <br>Status: {{actionProcess.pid != ''? 'active':'stopped'}}</h4>
+                    <table style="font-family: monospace;" class="table table-striped table-responsive table-hover">
+                        <tr ng-repeat="info in process_info_to_see">
+                            <td><b>{{info}}</b></td>
+                            <td>{{actionProcess[info]}}</td>
+                        </tr>
+                    </table>
+                </div>
+                <form name="tokenForm">
+                    <div class="modal-body">
+                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid != ''"
+                                ng-click="executeOperation('start')">Start
+                        </button>
+                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid == ''"
+                                ng-click="executeOperation('stop')">Stop Gracefully
+                        </button>
+                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid == ''"
+                                ng-click="executeOperation('force_stop')">Force kill
+                        </button>
+                        <!--button type="button" class="btn btn-secondary" ng-click="getLogs()">Logs</button-->
+                    </div>
+                    <div class="modal-footer">
+                        <div ng-show="showDivMessagge" class="alert" style="text-align: center;"
+                             ng-class="success? 'alert-success':'alert-danger' " role="alert">
+                            {{resultMessage}}
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" ng-click="resetMessages()">
+                            Close
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="token-host-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title"><br>Host: {{hostInfo.host}}</h3>
+                    <h3 class="modal-title"><br>Memory</h3>
+                    <table style="font-family: monospace;" class="table table-striped table-responsive table-hover">
+                        <thead style="text-transform: uppercase;">
+                        <tr>
+                            <th><h5>MEM</h5></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="(key, v) in hostInfo.memory.mem">
+                            <td><b>{{key}}</b></td>
+                            <td>{{v}}</td>
+                        </tr>
+                        </tbody>
+
+                        <thead style="text-transform: uppercase;">
+                        <tr>
+                            <th><h5>SWAP</h5></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="(key, v) in hostInfo.memory.swap">
+                            <td><b>{{key}}</b></td>
+                            <td>{{v}}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <h2 class="modal-title"><br>Disk</h2>
+                    <table ng-repeat="fileSys in hostInfo.disk" style="font-family: monospace;"
+                           class="table table-striped table-responsive table-hover">
+                        <thead style="text-transform: uppercase;">
+                        <tr>
+                            <td><h3>{{fileSys.Filesystem}}</h3></td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="(key, v) in fileSys">
+                            <td ng-class="key === 'Use%'? 'bg-primary':''"><b>{{key}}</b></td>
+                            <td ng-class="key === 'Use%' && v >= '80%'? 'bg-danger':''">{{v}}</td>
+                            <hr>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <form name="tokenForm">
+                    <div class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <div ng-show="showDivMessagge" class="alert" style="text-align: center;"
+                             ng-class="success? 'alert-success':'alert-danger' " role="alert">
+                            {{resultMessage}}
+                        </div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

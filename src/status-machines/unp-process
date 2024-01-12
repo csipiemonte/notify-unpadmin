@@ -1,0 +1,35 @@
+#!/bin/bash
+
+OPERATION=$1
+PROCESS=$2
+MODULE_NAME=$(echo "$PROCESS" | cut -f 1 -d '.')
+
+if [ "$OPERATION" == "force_stop" ]
+then
+    #PID=$(ps aux | grep node | grep $PROCESS | grep -v grep | awk '{ print $2 }')
+    #kill -9 $PID
+    pm2 stop /appsrv/unp/notify/ecosystem.config.js --only $MODULE_NAME
+    exit 0
+fi
+if [ "$OPERATION" == "stop" ]
+then
+    #PID=$(ps aux | grep node | grep $PROCESS | grep -v grep | awk '{ print $2 }')
+    #kill $PID
+    pm2 stop /appsrv/unp/notify/ecosystem.config.js --only $MODULE_NAME
+    exit 0
+fi
+if [ "$OPERATION" == "start" ]
+then
+    #PID=$(ps aux | grep node | grep $PROCESS | grep -v grep | awk '{ print $2 }')
+    #if [ "$PID" != "" ]
+    #then
+    #    echo "Process already running: $PID"
+    #    exit 0
+    #fi
+    #PROCESS_NAME=$(echo $PROCESS | awk -F '.' '{print $1}')
+    #cd
+    #bash notify/$PROCESS_NAME/$PROCESS_NAME &
+    pm2 restart /appsrv/unp/notify/ecosystem.config.js --only $MODULE_NAME --update-env
+    exit 0
+fi
+exit 1

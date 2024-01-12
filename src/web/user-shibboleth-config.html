@@ -1,0 +1,66 @@
+<div class="col-sm-12" ng-controller="user-shibboleth-config">
+    <div class="container">
+
+        <div ng-show="showDivMessagge" class="alert" ng-class="'alert-danger'" role="alert">
+            <span data-ng-bind-html="resultMessage"></span>
+        </div>
+        <div>
+            <input class="form-control" type="text" ng-keypress="$event.which===13 && search()" placeholder="user cf..."
+            ng-model="user_cf">
+            <br>
+            <table class="table table-striped table-responsive table-hover">
+                <thead>
+                <tr>
+                    <th>CF</th>
+                    <th>username</th>
+                    <th>roles</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="userEl in users | filter:user_cf">
+                    <td>{{userEl.cf}}</td>
+                    <td>{{userEl.username}}</td>
+                    <td>{{userEl.roles}}</td>
+                    <td> <button class="btn btn-danger btn-small" ng-click="delete(userEl.cf)">Delete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <br><br>
+        <div>
+            <table class="table table-striped table-responsive table-hover">
+                <thead>
+                <tr>
+                    <th><h4>Add New User</h4></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <input class="form-control" ng-keypress="$event.which===13 && insertOrUpdate()" type="text" placeholder="user cf"
+                                ng-model="newUserCf">
+
+                    </td>
+                    <td>
+                        <input class="form-control" ng-keypress="$event.which===13 && insertOrUpdate()" type="text" placeholder="username"
+                               ng-model="newUserUsername">
+                    </td>
+                    <td>
+                        <input class="form-control" ng-keypress="$event.which===13 && insertOrUpdate()" type="text" placeholder="roles separated by comma"
+                               ng-model="newUserRoles">
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" ng-click="insertOrUpdate()">Insert or Update</button>
+
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>

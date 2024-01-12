@@ -1,0 +1,2 @@
+#!/bin/bash
+cd src && node unpadmin.js >/dev/null 2>&1 &

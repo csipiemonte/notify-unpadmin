@@ -1,0 +1,13 @@
+{
+  "app_name": "unpadmin",
+  "server_port": 9091,
+  "mail": {
+    "server": {
+      "host": "localhost",
+      "port": 25
+    }
+  },
+  "log4js": {
+    "pm2": true
+  }
+}

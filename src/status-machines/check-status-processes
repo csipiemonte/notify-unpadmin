@@ -1,0 +1,19 @@
+#!/bin/bash
+
+source "process-"$(hostname)".conf"
+
+echo "{"
+
+declare -A MAP
+
+for process in $list
+do
+         MAP[$process]=$(ps aux | grep -v awk |  awk "/$process/ { print \$2}")
+done
+
+
+for K in "${!MAP[@]}"
+do
+     echo \"$K\": "\""${MAP[$K]}"\"," | sed s/,\ \}/\}/g
+done
+echo \"\":\"\"}

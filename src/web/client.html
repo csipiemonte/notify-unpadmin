@@ -1,0 +1,347 @@
+<!--div ng-controller="client">
+<pre>{{client}}</pre>
+</div-->
+<div ng-controller="client">
+
+    <div class="container">
+        <form name="serviceForm" class="form-horizontal" ng-submit="submit()">
+            <div class="form-group row">
+                <div class="control-label col-sm-2">
+                    <label>
+                        Service UUID
+                    </label>
+                </div>
+                <div class="form-control-static col-sm-10 ">
+                    {{service.uuid}}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Service Name</label>
+                <div class="col-sm-10">
+                    <input class="form-control" type="text" name="service_name" placeholder="service name"
+                           required minlength="4" ng-model="service.name" ng-class="listServices.includes(service.name)? 'error-input' : '' "/>
+                    <p ng-show="serviceForm.service_name.$invalid && serviceForm.service_name.$touched" class="alert alert-danger">Service name must be at least 4 characters</p>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Reference Email</label>
+                <div class="col-sm-10">
+                    <input class="form-control" type="text" placeholder="email"
+                           required name="client_ref_email" ng-model="client.reference_email"/>
+                    <p ng-show="serviceForm.client_ref_email.$invalid && serviceForm.client_ref_email.$touched" class="alert alert-danger">Reference Email is mandatory</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Subscription Date</label>
+                <div class="col-sm-10 form-control-static">
+                    {{client.subscription_date | date:'dd/MMMM/yyyy'}}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Tags</label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" name="tags" placeholder="tags"
+                           ng-model="service.tags"/>
+                </div>
+                <div class="col-sm-2">
+                    <label class="control-label">Institution</label>
+                    <select class="" name="repeatSelect" id="repeatSelect" ng-model="institutionTags.model">
+                        <option ng-repeat="option in institutionTags.availableOptions" value="{{option}}">{{option}}
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+    		 <!--div class="form-group">
+    		 	<label class="control-label col-sm-2">Template email</label>
+    		 	<div class="col-sm-10 form-control-static">
+    		 	    <a ng-href="" id='dwnldLnk'  ></a>
+    		 		<a ng-href="#"  ng-click="download()">{{template}}</a>
+    		 		<button type="button" id="deleteTemplate" ng-click="deleteTemplate()" style="border: 0; background: transparent">
+    					<img src="./images/delete-icon.jpg" width="30" height="20" alt="submit" />
+					</button>
+             </div>
+             <div class="form-group">
+    		 	<label class="control-label col-sm-2"></label>
+                <div class="col-sm-4">
+                	<input type="file" accept=".html" name="file" id="file" class="inputfile inputfile-6" ng-click="handleFileInput()"  />
+					<label for="file"><span></span> <strong><svg xmlns="http://www.w3.org/2000/svg" width="20" height="17" viewBox="0 0 20 17">
+					<path d="M10 0l-5.2 4.9h3.3v5.1h3.8v-5.1h3.3l-5.2-4.9zm9.3 11.5l-3.2-2.1h-2l3.4 2.6h-3.5c-.1 0-.2.1-.2.1l-.8 2.3h-6l-.8-2.2c-.1-.1-.1-.2-.2-.2h-3.6l3.4-2.6h-2l-3.2 2.1c-.4.3-.7 1-.6 1.5l.6 3.1c.1.5.7.9 1.2.9h16.3c.6 0 1.1-.4 1.3-.9l.6-3.1c.1-.5-.2-1.2-.7-1.5z"/></svg> Scegli un file&hellip;</strong></label>
+                </div>
+                <div class="col-sm-2">
+                    <button class="btn btn-md btn-primary" ng-click="startUpload()">Start uploading</button>
+                </div>
+            </div-->
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">notes</label>
+                <textarea rows="4" class="col-sm-10" ng-model-options="{allowInvalid: true}" placeholder="notes"
+                          ng-model="client.notes"></textarea>
+            </div>
+            <hr>
+        </form>
+        <div ng-click="calculateToken()">
+            <h2>Token</h2>
+
+            <div>
+                <div class="form-group">
+                    <label title="expiration date" class="control-label col-sm-2">exp</label>
+                    <div class="col-sm-10 ">
+                        <input required type="datetime-local" class="form-control"
+                               ng-model="token.exp"
+                               placeholder="dd/MM/yyyy"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label title="issue at" class="control-label col-sm-2">iat</label>
+                    <div class="col-sm-10 ">
+                        <input required type="datetime-local" class="form-control"
+                               ng-model="token.iat"
+                               placeholder="dd/MM/yyyy"/>
+                    </div>
+                </div>
+
+                <h2>Applications&Permissions</h2>
+                <div>
+                    <h3>MB</h3>
+                    <div>
+                        <input type="checkbox" id="mb_enqueue" ng-model="token.applications.mb.enqueue"/>
+                        <label for="mb_enqueue">Enqueue</label>
+
+                        <input type="checkbox" id="mb_dequeue" ng-model="token.applications.mb.dequeue"/>
+                        <label for="mb_dequeue">Dequeue</label>
+                    </div>
+                    <h3>Preferences</h3>
+                    <div>
+                        <input type="checkbox" id="preferences_read" ng-model="token.applications.preferences.read"/>
+                        <label for="preferences_read">Read</label>
+
+                        <input type="checkbox" id="preferences_write" ng-model="token.applications.preferences.write"/>
+                        <label for="preferences_write">Write</label>
+
+                        <input type="checkbox" id="preferences_admin" ng-model="token.applications.preferences.admin"/>
+                        <label for="preferences_admin">Admin</label>
+                    </div>
+                    <h3>Messages Store</h3>
+                    <div>
+                        <input type="checkbox" id="mex_read" ng-model="token.applications.mex.read"/>
+                        <label for="mex_read">Read</label>
+
+                        <input type="checkbox" id="mex_write" ng-model="token.applications.mex.write"/>
+                        <label for="mex_write">Write</label>
+
+
+                        <input type="checkbox" id="mex_admin" ng-model="token.applications.mex.admin"/>
+                        <label for="mex_admin">Admin</label>
+                    </div>
+                    <h3>Events</h3>
+                    <div>
+                        <input type="checkbox" id="events_read" ng-model="token.applications.events.read"/>
+                        <label for="events_read">Read</label>
+
+                        <input type="checkbox" id="events_write" ng-model="token.applications.events.write"/>
+                        <label for="events_write">Write</label>
+
+
+                        <input type="checkbox" id="events_admin" ng-model="token.applications.events.admin"/>
+                        <label for="events_admin">Admin</label>
+                    </div>
+                </div>
+
+                <!--h2>Permissions</h2>
+                <div>
+                    <input type="checkbox" id="backend" ng-model="token.permissions.backend"/>
+                    <label for="backend">backend</label>
+                    <br>
+                    <input type="checkbox" id="user" ng-model="token.permissions.user"/>
+                    <label for="user">user</label>
+                    <br>
+                    <input type="checkbox" id="admin" ng-model="token.permissions.admin"/>
+                    <label for="admin">admin</label>
+                </div-->
+            </div>
+
+            <h2> Preferences Service</h2>
+
+            <!--div ng-repeat="(value,enabled) in availableChannels" class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="availableChannels[value]"/>{{value}}
+                </label>
+                <input class="form-control" type="text"
+                       ng-model="channelsContent[value]"/>
+                <br/>
+            </div-->
+
+
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="availableChannels.push"/>Push
+                </label>
+                <input class="form-control" type="text"
+                       ng-model="token.preferences.push"/>
+                <br/>
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="availableChannels.email"/>Email ( che sia presente nel sistema di
+                    CSI)
+                </label>
+                <input class="form-control" type="text"
+                       ng-model="token.preferences.email"/>
+                <br/>
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="availableChannels.sms"/>SMS ( credenziali di SMS gateway di CSI)
+                </label>
+                <div>
+                    <input class="form-control" type="text" placeholder="project code"
+                           ng-model="token.preferences.sms.project_code"/>
+                    <input class="form-control" type="text"
+                           ng-model="token.preferences.sms.username" placeholder="username"/>
+                    <input class="form-control" type="text"
+                           ng-model="token.preferences.sms.password" placeholder="password"/>
+                </div>
+                <br/>
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="availableChannels.io"/>IOItalia
+                </label>
+                <div>
+                    <input class="form-control" type="text" placeholder="ioitalia token"
+                           ng-model="token.preferences.io"/>
+                </div>
+                <br/>
+            </div>
+
+            <div class="form-inline">
+                <label>Token</label>
+                <input class="form-control" type="text" id="tokenText"
+                       ng-model="client.token_notify" readonly/>
+
+                <span class="input-group-button">
+                    <button class="btn" type="button"
+                            data-clipboard-target="#tokenText">
+                        <img class="clippy" src="./images/clippy.svg" width="13"
+                             alt="Copy to clipboard">
+                    </button>
+                </span>
+
+                <label>Crypted Token( if encryption is enabled)</label>
+                <input class="form-control" type="text" id="tokenCryptedText"
+                       ng-model="encrypted_token_notify" readonly/>
+
+                <span class="input-group-button">
+                    <button class="btn" type="button"
+                            data-clipboard-target="#tokenCryptedText">
+                        <img class="clippy" src="./images/clippy.svg" width="13"
+                             alt="Copy to clipboard">
+                    </button>
+                </span>
+
+            </div>
+
+            <pre pretty-json="token_info"></pre>
+
+            <hr>
+            <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'"
+                 role="alert">
+                <span data-ng-bind-html="resultMessage"></span>
+            </div>
+            <div class="col-sm-offset-1 col-sm-10">
+                <br><!--input class="btn btn-primary " type="submit" id="submit" value="Save"-->
+                <button name="saveButton" ng-disabled="serviceForm.$invalid" class="btn btn-primary " ng-click="save()">
+                    Save
+                </button>
+                <button class="btn btn-primary " ng-disabled="serviceForm.$invalid" data-toggle="modal" data-target="#mail-modal" ng-click="saveAndSend()">
+                    Save&Send
+                </button>
+            </div>
+        </div>
+
+
+    </div>
+
+    <br><br>
+
+
+    <div class="modal fade" id="mail-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h4 class="modal-title w-100 font-weight-bold">Email</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body mx-3">
+                    <div class="form-group">
+                        <div class="md-form mb-5 row">
+                            <div class="col-sm-2">
+                                <label data-error="wrong" data-success="right"><i
+                                        class="glyphicon glyphicon-envelope"></i> Sender</label>
+                            </div>
+                            <div class="col-sm-10">
+                                <input type="email" id="defaultForm-emailsender" ng-model="email_to_send.sender"
+                                       class="form-control validate">
+                            </div>
+                        </div>
+
+                        <div class="md-form mb-5 row">
+                            <div class="col-sm-2">
+                                <label data-error="wrong" data-success="right"><i
+                                        class="glyphicon glyphicon-envelope"></i> CC</label>
+                            </div>
+                            <div class="col-sm-10">
+                                <input type="text" ng-model="email_to_send.cc" class="form-control validate">
+                            </div>
+                        </div>
+
+                        <div class="md-form mb-5 row">
+                            <div class="col-sm-2">
+                                <label data-error="wrong" data-success="right"><i
+                                        class="glyphicon glyphicon-envelope"></i> Recipient</label>
+                            </div>
+                            <div class="col-sm-10">
+                                <input type="text" ng-model="email_to_send.recipient" class="form-control validate">
+                            </div>
+                        </div>
+
+                        <div class="md-form mb-5 row">
+                            <div class="col-sm-2">
+                                <label data-error="wrong" data-success="right">Subject</label>
+                            </div>
+                            <div class="col-sm-10">
+                                <input type="text" ng-model="email_to_send.subject" class="form-control">
+                            </div>
+                        </div>
+
+
+                        <div class="md-form mb-5 row">
+                            <div class="col-sm-2">
+                                <label data-error="wrong" data-success="right">Body</label>
+                            </div>
+                            <div class="col-sm-10">
+                                <textarea rows="20" ng-model="email_to_send.body" class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary " data-dismiss="modal" ng-click="sendMail()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--button ng-click="getToken(e.name,)">get token</button-->
+</div>

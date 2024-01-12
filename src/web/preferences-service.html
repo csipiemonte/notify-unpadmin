@@ -1,0 +1,62 @@
+<div ng-controller="preferences-service">
+
+    <div class="container">
+        <form class="form-horizontal" ng-submit="submit()">
+            <div class="form-group row">
+                <div class="control-label col-sm-2">
+                    <label>
+                        ID
+                    </label>
+                </div>
+                <div class="form-control-static col-sm-10 ">
+                    {{service.uuid}}
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-2">Token Notify</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" ng-model-options="{allowInvalid: true}" type="text"
+                               ng-model="service.token_notify"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2">Tags</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" ng-model-options="{allowInvalid: true}" type="text"
+                               ng-model="service.tags"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2">Service Name</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" ng-model-options="{allowInvalid: true}" type="text"
+                               ng-model="service.name"/>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Preferences Channels</h2>
+
+            <div ng-repeat="(value,enabled) in availableChannels" class="checkbox">
+                <label>
+                    <input type="checkbox" ng-model="availableChannels[value]"/>{{value}}
+                    <br/>
+                </label>
+            </div>
+            <!--div class="checkbox">
+                <label>
+                    <input type="checkbox" checked="checked" disabled/>Mex
+                    <br/>
+                </label>
+            </div-->
+
+            <br/>
+        </form>
+        <button class="btn btn-primary " ng-click="savePreference()"> Save</button>
+
+        <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'" role="alert">
+            <span data-ng-bind-html="resultMessage"></span>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+
+OPERATION=$1
+SERVER=$2
+PROCESS=$3
+USER=$(echo $SERVER | awk -F '@' '{print $1}')
+PROCESS_NAME=$(echo $PROCESS | awk -F '.' '{print $1}')
+EXIT_CODE=0
+echo "{"
+echo "  \"server\":\"$SERVER\","
+echo "  \"operation\":\"$OPERATION\","
+echo "  \"process\":\"$PROCESS\","
+echo "  \"user\":\"$USER\","
+
+if [ "$OPERATION" == "stop" ]
+then
+        ssh $SERVER ps aux >processi.txt
+        PID=$(grep $PROCESS processi.txt| grep -v grep |grep -v bash |awk '{print $2}')
+        rm -f processi.txt
+        if [ "$PID" != "" ]
+        then
+                ssh $SERVER kill -9 $PID 2>detail.txt
+                RESULT=$?
+                if [ "$RESULT" != 0 ]
+                then
+                        echo "  \"error\":\"Failed to kill $PROCESS on $SERVER\","
+                        echo "  \"detail\":\"$(cat detail.txt)\","
+                        rm -f detail.txt
+                        EXIT_CODE=1
+                fi
+        else
+                echo "  \"error\":\"$PROCESS not found on $SERVER\","
+                EXIT_CODE=1
+        fi
+        echo "\"\":\"\" }"
+        exit $EXIT_CODE
+fi
+if [ "$OPERATION" == "start" ]
+then
+        ssh $SERVER ps aux > processi.txt
+        PID=$(grep $PROCESS processi.txt| grep -v grep |grep -v bash |awk '{print $2}')
+        rm -f processi.txt
+        if [ "$PID" == "" ]
+        then
+            if [ "js" == $(echo $PROCESS | awk -F '.' '{print $2}') ]
+            then
+                ssh $SERVER $PROCESS_NAME'/'$PROCESS_NAME '2>detail.txt'
+            else
+                ssh $SERVER $PROCESS 'redis-conf/'$PROCESS'.conf 2>detail.txt'
+            fi
+            RESULT=$?
+            if [ "$RESULT" != 0 ]
+            then
+                    echo "  \"error\":\"Failed to start $PROCESS on $SERVER\","
+                    echo "  \"detail\":\"$(cat detail.txt)\","
+                    rm -f detail.txt
+                    EXIT_CODE=1
+            fi
+        else
+                echo "  \"error\":\"$PROCESS already running on $SERVER\","
+                EXIT_CODE=1
+        fi
+fi
+echo "\"\":\"\" }"
+exit $EXIT_CODE

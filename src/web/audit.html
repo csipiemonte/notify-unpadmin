@@ -1,0 +1,118 @@
+<div class="col-sm-12" ng-controller="audit">
+    <!--input class =" form-control" type="text" id="searchNames" placeholder="Search for client names.." title="Type in a name"-->
+
+    <div class="jumbotron">
+        <div class="row form-inline">
+            <input class="form-control" ng-keypress="$event.which===13 && search()" type="text" placeholder="audit uuid" ng-model="params.filter.uuid.ci">
+            <input class="form-control" ng-keypress="$event.which===13 && search()" type="text" placeholder="x request id" ng-model="params.filter.x_request_id.ci">
+            <input class="form-control" ng-keypress="$event.which===13 && search()" type="text" placeholder="host" ng-model="params.filter.host.ci">
+            <input class="form-control" ng-keypress="$event.which===13 && search()" type="text" placeholder="resource" ng-model="params.filter.resource.ci">
+            <input class="form-control" ng-keypress="$event.which===13 && search()" type="text" placeholder="http status" ng-model="params.filter.http_status.eq">
+            <input class="form-control" ng-keypress="$event.which===13 && search()" type="text" placeholder="http method" ng-model="params.filter.http_method.eq">
+        </div>
+        <br>
+        <div class="form-inline">
+
+            <label>Date</label>
+            <input type="datetime-local" class="form-control"
+                   ng-model="params.filter.timestamp.gte"
+                   placeholder="dd/MM/yyyy"/>
+            <input type="datetime-local" class="form-control"
+                   ng-model="params.filter.timestamp.lte"
+                   placeholder="dd/MM/yyyy"/>
+        </div>
+
+        <br>
+        <!--label class="checkbox" ng-repeat="(k,v) in tipiChoises">
+            <input type="checkbox" ng-model="tipiChoises[k]">{{k}}
+        </label-->
+        <div class="row form-inline">
+            <label>client name</label>
+            <select class="form-control" ng-model="params.filter.client_name.eq" ng-options="client for client in clients">
+                <option value=""></option>
+            </select>
+            <label>app name</label>
+            <select class="form-control" ng-model="params.filter.app_name.eq" ng-options="app_name for app_name in app_names">
+                <option value=""></option>
+            </select>
+        </div>
+        <br>
+        <button class="btn btn-success" ng-click="search()">search</button>
+        <button class="btn btn-primary" ng-click="set_dates(1e4, 0,params.filter.timestamp,search())">all</button>
+        <button class="btn btn-primary" ng-click="set_dates(0, 0,params.filter.timestamp,search())">today</button>
+        <button class="btn btn-primary" ng-click="set_dates(1, 1,params.filter.timestamp,search())">yesterday</button>
+        <button class="btn btn-primary" ng-click="set_dates(7, 0,params.filter.timestamp,search())">last 7 days</button>
+        <button class="btn btn-primary" ng-click="set_dates(30, 0,params.filter.timestamp,search())">last 30 days</button>
+        <button class="btn btn-primary" ng-click="set_dates(from_begin_year(), 0,params.filter.timestamp,search())">this year</button>
+
+        record: {{total_elements | number}}
+
+        <!--button class="btn btn-primary" ng-click="createReport()">Create Report</button-->
+
+    </div>
+    <br><br>
+    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger' " role="alert">
+        {{resultMessage}}
+    </div>
+
+    <table class="table table-striped table-responsive table-hover">
+        <thead style = "text-transform: uppercase;">
+        <tr>
+            <th>x_request_id</th>
+            <th>timestamp</th>
+            <th>client_name</th>
+            <th>resource</th>
+            <th>http_method</th>
+            <th>http_status</th>
+            <th>app_name</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        <tr ng-repeat="(k, e) in audits">
+            <td ng-attr-title="{{k}}">{{k.substring(0,8)}}</td>
+            <td>{{(e.request.timestamp || e.response.timestamp) | date:'dd/MM/yyyy HH:mm:ss'}}</td>
+            <td>{{e.request.client_name || e.response.client_name}}</td>
+            <td>{{e.request.resource || e.response.resource}}</td>
+            <td>{{e.request.http_method || e.response.http_method}}</td>
+            <td>{{e.response.http_status}}</td>
+            <td>{{e.request.app_name || e.response.app_name}}</td>
+            <td><button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#token-modal" ng-click="openModal(e)">Info</button></td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="col-sm-1">
+        <button ng-show="currentPage > 1" ng-click="prec()"><</button>
+        <button ng-show="currentPage > 1" ng-click="choose(1)"><<</button>
+    </div>
+    <div class="col-sm-1">{{currentPage}} di {{totalPages}}</div>
+    <div class="col-sm-1">
+        <button ng-show="currentPage < totalPages" ng-click="succ()"> ></button>
+        <button ng-show="currentPage < totalPages" ng-click="choose(totalPages)">>></button>
+    </div>
+
+
+    <div id="token-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title"><b>Info</b></h4>
+                </div>
+                <form name="tokenForm">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <pre pretty-json="info"></pre>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

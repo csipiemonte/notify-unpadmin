@@ -1,0 +1,214 @@
+<div class="col-sm-12" ng-controller="redis-status">
+    <div class="row">
+        <div class=" col-md-3" ng-repeat="(queue_name, q) in queues">
+            <table style="font-family: monospace;" class="table table-responsive table-hover">
+                <caption>{{queue_name}} Queues</caption>
+                <tr ng-repeat="(name, length) in q" ng-class="length > 1000 ? 'bg-danger' : 'bg-default'">
+                    <td width="1%">
+                        {{name.substring("mb:queues:".length)}}
+                    </td>
+                    <td>
+                        <a ng-show="length>0" href="" data-target="#message_list-modal" data-toggle="modal"
+                           ng-click="showMessageList(name.substring('mb:queues:'.length))">{{length}}</a>
+                        <a ng-show="length==0" href="">{{length}}</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="row">
+            <div class=" col-md-3">
+                <table style="font-family: monospace;" class="table table-responsive table-hover">
+                    <caption>Hashmaps</caption>
+                    <tr ng-repeat="(queue_name, q) in maps">
+                        <td width="1%">
+                            {{queue_name}}
+                        </td>
+                        <td>
+                            <a href="" ng-click="showMap(queue_name)" data-target="#hm-modal" data-toggle="modal">{{q}}</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <h3>Redis Commander</h3>
+            <div class="animate-switch-container"
+                 ng-switch on="env.ENVIRONMENT.toLowerCase() || localhost">
+                <div class="animate-switch" ng-switch-when="localhost"><a href="http://localhost:8081/" target="_blank">Go
+                    to Redis Commander</a></div>
+                <div class="animate-switch" ng-switch-when="dev"><a
+                        href="http://dev-notify.csi.it/redis-commander/"
+                        target="_blank">Go to Redis Commander</a>
+                </div>
+                <div class="animate-switch" ng-switch-when="tst"><a
+                        href="http://tst-notify.csi.it/redis-commander/"
+                        target="_blank">Go to Redis Commander</a></div>
+                <div class="animate-switch" ng-switch-when="prod"><a
+                        href="http://notify.csi.it/redis-commander/"
+                        target="_blank">Go to Redis Commander</a></div>
+            </div>
+            <label><a href=""></a></label>
+        </div>
+
+        <div>
+            <h3>Redis Info ({{redis_info.used_memory_human}}/{{redis_info.maxmemory_human}})</h3>
+            <table class="table table-responsive table-hover">
+                <tr ng-repeat="(k,v) in redis_info">
+                    <th width="1%">{{k}}</th>
+                    <td>{{v}}</td>
+                </tr>
+            </table>
+        </div>
+
+
+        <div ng-show="(!user || user === '') || (user.roles.includes('admin') )" id="message_list-modal"
+             class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                        <div class="row">
+                            <h4 class="modal-title col-sm-4"><b>{{title}}</b></h4>
+                        </div>
+                    </div>
+                    <table class="table table-responsive table-hover">
+                        <tr ng-repeat="e in message_list">
+                            <td>
+                                <!--div data-dismiss="modal" ng-click="deleteMex($index,e)" data-target="#mail-modal" data-toggle="modal">
+                                    <i style="font-size: 19px;cursor: pointer" class="glyphicon glyphicon-trash"></i>
+                                </div-->
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="input-group-button">
+                                        <button class="btn" ngclipboard
+                                                data-clipboard-target="#mex{{e.uuid}}">
+                                            <img class="clippy" src="./images/clippy.svg" width="13"
+                                                 alt="Copy to clipboard">
+                                        </button>
+                                         <input style="opacity:0;height: 0;width: 5px;" id="mex{{e.uuid}}"
+                                                value="{{e}}">
+                                    </span>
+                                </div>
+                            </td>
+                            <td>{{e.uuid}}</td>
+                            <td>{{e.timestamp | date}}</td>
+                            <td>{{e.user.preference_service_name}}</td>
+                            <td>{{(e.payload | json).substring(0,115)+'......'}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div ng-show="(!user || user === '') || (user.roles.includes('admin') )" id="hm-modal"
+             class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+                        </button>
+                    </div>
+                    <table class="table table-responsive table-hover">
+                        <tr ng-repeat="(key,value) in hm">
+                            <td>
+                                <!--div data-dismiss="modal" ng-click="deleteMexMap(key,value)" data-target="#mail-modal" data-toggle="modal">
+                                    <i style="font-size: 19px;cursor: pointer" class="glyphicon glyphicon-trash"></i>
+                                </div-->
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="input-group-button">
+                                        <button class="btn" ngclipboard
+                                                data-clipboard-target="#hm{{key}}">
+                                            <img class="clippy" src="./images/clippy.svg" width="13"
+                                                 alt="Copy to clipboard">
+                                        </button>
+                                         <input style="opacity:0;height: 0;width: 5px;" id="hm{{key}}"
+                                                value="{{value}}">
+                                    </span>
+                                </div>
+                            </td>
+                            <td>{{key}}</td>
+                            <td>{{(value | json).substring(0,115)}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="mail-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header text-center">
+                        <h4 class="modal-title w-100 font-weight-bold">Email</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body mx-3">
+                        <div class="form-group">
+                            <div class="md-form mb-5 row">
+                                <div class="col-sm-2">
+                                    <label data-error="wrong" data-success="right"><i
+                                            class="glyphicon glyphicon-envelope"></i> Sender</label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <input type="email" id="defaultForm-emailsender" ng-model="email_to_send.sender"
+                                           class="form-control validate">
+                                </div>
+                            </div>
+
+                            <div class="md-form mb-5 row">
+                                <div class="col-sm-2">
+                                    <label data-error="wrong" data-success="right"><i
+                                            class="glyphicon glyphicon-envelope"></i> CC</label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <input type="text" ng-model="email_to_send.cc" class="form-control validate">
+                                </div>
+                            </div>
+
+                            <div class="md-form mb-5 row">
+                                <div class="col-sm-2">
+                                    <label data-error="wrong" data-success="right"><i
+                                            class="glyphicon glyphicon-envelope"></i> Recipient</label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <input type="text" ng-model="email_to_send.recipient" class="form-control validate">
+                                </div>
+                            </div>
+
+                            <div class="md-form mb-5 row">
+                                <div class="col-sm-2">
+                                    <label data-error="wrong" data-success="right">Subject</label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <input type="text" ng-model="email_to_send.subject" class="form-control">
+                                </div>
+                            </div>
+
+
+                            <div class="md-form mb-5 row">
+                                <div class="col-sm-2">
+                                    <label data-error="wrong" data-success="right">Body</label>
+                                </div>
+                                <div class="col-sm-10">
+                                    <textarea rows="10" ng-model="email_to_send.body" class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary " data-dismiss="modal" ng-click="sendMail()">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
