@@ -12,7 +12,9 @@ var bodyParser = require('body-parser');
 var util = require("util");
 var request = util.promisify(require('request'));
 var cryptoAES_cbc = obj.cryptoAES_cbc();
-const redis = new require('ioredis')(conf.redis);
+
+const Redis = require("ioredis");
+const redis = new Redis(conf.redis);
 const fs = require("fs");
 
 router.use(bodyParser.json());
@@ -20,7 +22,7 @@ router.use(bodyParser.json());
 var jwt = require('jsonwebtoken');
 
 router.get('/', async function (req, res, next) {
-    logger.debug("called clients/ filters:", req.query.filter);
+    logger.debug("called GET /clients, filters:", req.query.filter);
     let filter = req.query.filter ? req.query.filter : {};
 
     try {
@@ -39,7 +41,7 @@ router.get('/', async function (req, res, next) {
 });
 
 router.get('/:client_id', async function (req, res, next) {
-    logger.debug("called clients/:client_id", req.params.client_id);
+    logger.debug("called GET /clients/%s", req.params.client_id);
     try {
         var sql = buildQuery.select().table("clients").filter({"client_id": {"eq": req.params.client_id}}).sql;
     } catch (err) {
@@ -53,12 +55,10 @@ router.get('/:client_id', async function (req, res, next) {
     }
 
     next({type: "ok", status: 200, message: result[0] });
-
-
 });
 
 router.get('/services/:service_name', async function (req, res, next) {
-    logger.debug("called clients/service/" + req.params.service_name);
+    logger.debug("called GET /clients/services/%s", req.params.service_name);
     try {
         var sql = buildQuery.select().table("clients").filter({"preference_service_name": {"eq": req.params.service_name}}).sql;
     } catch (err) {
@@ -72,12 +72,10 @@ router.get('/services/:service_name', async function (req, res, next) {
     }
 
     next({type: "ok", status: 200, message: result[0] });
-
-
 });
 
 router.put('', async function (req, res, next) {
-    logger.debug("called PUT clients:", JSON.stringify(req.body));
+    logger.debug("called PUT /clients, body:", JSON.stringify(req.body));
 
     var client = req.body;
 
@@ -96,21 +94,21 @@ router.put('', async function (req, res, next) {
     next({type: "ok", status: 200, message: result});
 });
 
-
 router.get('/:client_id/token', function (req, res, next) {
 
-    logger.debug("called get token");
     let payload = req.query.payload;
+    logger.debug("called GET /clients/%s/token, query.payload:%s", req.params.client_id, payload);
 
     var token = jwt.sign(JSON.parse(payload), conf.security.secret);
-
     next({type: "ok", status: 200, message: token});
 });
 
 router.get('/:client_id/token/:application', function (req, res) {
 
+    logger.debug("called GET /clients/%s/token/%s", req.params.client_id, req.params.application);
+
     var sql = buildQuery.select().table("clients").filter({"client_id": {"eq": req.params.client_id}}).sql;
-    logger.debug("called api/v1/:uuid/notify/token: " + sql);
+    logger.debug("select client: ", sql);
     db.query(sql, (err, result) => {
         if (err) return Utility.errorHandler(res, 500, err);
         if (!result) return Utility.errorHandler(res, 404, "client not found");
@@ -130,7 +128,6 @@ router.get('/:client_id/token/:application', function (req, res) {
                     error ? error : body, response ? response.statusCode : 500);
                 return Utility.errorHandler(res, 500, error ? error : body);
             }
-
 
             let payload = {
                 uuid: Utility.uuid(),
@@ -156,11 +153,8 @@ router.get('/:client_id/token/:application', function (req, res) {
             logger.debug("token:", token);
             res.end(token);
         });
-
-
     });
 });
-
 
 /**
  * get possible values of a enum column type of services_registry
@@ -168,7 +162,7 @@ router.get('/:client_id/token/:application', function (req, res) {
 router.get('/column_types/service_types', function (req, res) {
 
     var sql = buildQuery.columnInformation(conf.mysql.database, "services_registry", "service_type").sql;
-    logger.debug("called api/v1/services/service_types: ", sql);
+    logger.debug("called GET /clients/column_types/service_types:", sql);
     db.query(sql, (err, result) => {
         if (err) return Utility.errorHandler(res, 500, err);
         var type = result[0].type.substring(5).replace(/\)/g, "").replace(/'/g, "").split(",");

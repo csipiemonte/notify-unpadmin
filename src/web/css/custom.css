@@ -87,6 +87,126 @@ body {
     height:500px;
 }
 
+.filter-panel {
+    padding-top: 30px;
+    padding-bottom: 10px;
+    padding-right: 30px;
+    padding-left: 30px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+/*    color: inherit;
+    background-color: #eee;*/
 
+    background: #FFFFFF 0% 0% no-repeat padding-box;
+    box-shadow: 0px 2px 12px #00000029;
+    border: 1px solid #EFEFEF;
+    border-radius: 5px;
+    opacity: 1;
+}
+.filter-panel div {
+    margin-bottom: 10px;
+}
 
+.show-panel {
+    padding-top: 30px;
+    padding-bottom: 10px;
+    padding-right: 30px;
+    padding-left: 30px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+    color: inherit;
+    background-color: #F0F3F8;
+}
 
+.counter-panel {
+    font-size: 24px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-right: 30px;
+    padding-left: 30px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+/*    color: inherit;
+    background-color: #eee;*/
+
+    background: #FFFFFF 0% 0% no-repeat padding-box;
+    box-shadow: 0px 1px 5px #00000029;
+    border: 1px solid #EFEFEF;
+    border-radius: 5px;
+    opacity: 1;
+}
+
+.info-box {
+    box-shadow: 0 0 1px rgb(0 0 0 / 13%), 0 1px 3px rgb(0 0 0 / 20%);
+    border-radius: 0.25rem;
+    background-color: #fff;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    margin-bottom: 1rem;
+    min-height: 80px;
+    padding: 0.5rem;
+    position: relative;
+    width: 100%;
+}
+
+.info-box .info-box-content {
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    line-height: 1.8;
+    -webkit-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+    padding: 0 10px;
+}
+
+.info-box .info-box-icon {
+    border-radius: 0.25rem;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    font-size: 1.875rem;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    text-align: center;
+    width: 70px;
+}
+
+.info-box .info-box-text, .info-box .progress-description {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.info-box .info-box-number {
+    display: block;
+    margin-top: 0.25rem;
+    font-weight: 700;
+}
+
+.totalLabel {
+    text-align: center;
+    color: #666666;
+    font-size: x-small;
+}
+
+.top5SendersTitle {
+    text-align: center;
+    font-weight: bold;
+}
+
+.fixedHeigh {
+    height: 300px;
+}

@@ -51,6 +51,8 @@ router.get('/messages', async function (req, res) {
 
 
     var fields = req.query.fields ? req.query.fields.split(",") : Object.keys(result[0]);
+    //res.setHeader("Content-Type", "routerlication/vnd.openxmlformats-officedocument.spreadsheetml.sheet);
+    //res.setHeader("Content-Disposition", "attachment; filename=excel.xlsx");
     excelCreator.sheet("messages").header(fields, styleHeader).content(result, styleContent).write("messages_" + Utility.getDateFormatted(new Date()) + ".xlsx", res);
 
 });
@@ -90,7 +92,10 @@ router.get('/events', async function (req, res) {
 
 
     var fields = req.query.fields ? req.query.fields.split(",") : Object.keys(result[0]);
+    //res.setHeader("Content-Type", "routerlication/vnd.openxmlformats-officedocument.spreadsheetml.sheet);
+    //res.setHeader("Content-Disposition", "attachment; filename=excel.xlsx");
     excelCreator.sheet("events").header(fields, styleHeader).content(result, styleContent).write("events_" + Utility.getDateFormatted(new Date()) + ".xlsx", res);
+
 
 });
 

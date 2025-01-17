@@ -1,94 +1,55 @@
-<!--div ng-controller="client">
-<pre>{{client}}</pre>
-</div-->
+
 <div ng-controller="utilities">
 
     <div class="container">
-        <br>
-        <div class="form-inline">
-            <label>Token</label>
-            <input class="form-control" type="text" id="tokenText"
-                   ng-model="token_notify"/>
-            <label>Password</label>
-            <input class="form-control" type="text" id="passwordText"
-                   ng-model="password"/>
-        </div>
-        <br>
-        <div class="form-inline">
-            <span class="input-group-button">
-                    <button class="btn" type="button" ng-click="decryptAES()">
-                        Decrypt
-                    </button>
-            </span>
-            <span class="input-group-button">
-                    <button class="btn" type="button" ng-click="encryptAES()">
-                        Crypt
-                    </button>
-            </span>
 
-
-            <label>Decrypted Token JWT</label>
-            <input class="form-control" type="text" id="tokenCryptedText"
-                   ng-model="token_notify_jwt" readonly/>
-
-            <span class="input-group-button">
-                <button class="btn" type="button"
-                        data-clipboard-target="#tokenCryptedText">
-                    <img class="clippy" src="./images/clippy.svg" width="13"
-                         alt="Copy to clipboard">
-                </button>
-            </span>
+        <div class="form-horizontal" style="margin-bottom: 20px;">
+            <div class="form-group">
+                <label class="col-sm-2">Token</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" rows="5" id="tokenText" ng-model="token_notify"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-2">Password</label>
+                <div class="col-sm-10">
+                    <input class="form-control" type="password" id="passwordText" ng-model="password"/>
+                </div>
+            </div>
+            
+            <div class="text-center">
+            <button class="btn btn-primary" type="button" ng-click="decryptAES()">Decrypt</button>
+            <button class="btn btn-primary" type="button" ng-click="encryptAES()"><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> Encrypt</button>
+            </div>
+            
         </div>
 
-        <br>
-        <pre pretty-json="token"></pre>
-
-        <hr>
-        <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'"
-             role="alert">
+        <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger'" role="alert">
             <span data-ng-bind-html="resultMessage"></span>
         </div>
 
-    </div>
+        <div class="row">
+            <div class="form-group col-sm-12">
+                <div>
+                    <label>Result</label>
+                    <button class="btn" type="button" data-clipboard-target="#tokenCryptedText" title="Copy to clipboard">
+                        <img class="clippy" src="./images/clippy.svg" width="13">
+                    </button>
+                </div>
+                <textarea class="form-control" rows="5" id="tokenCryptedText" ng-model="token_notify_jwt" readonly></textarea>
+            </div>
+        </div>
 
+        <div class="row">
+            <div class="form-group col-sm-12">
+                <label>JWT Data</label>
+                <pre pretty-json="token"></pre>
+            </div>
+        </div>
+
+    </div>
 
 </div>
-
-<br><br>
-
-
-<!--div id="mail-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
-                </button>
-                <h4 class="modal-title"><b>Email</b></h4>
-            </div>
-            <form name="tokenForm">
-                <div class="form-group">
-                    <div class="container">
-                        <input class="form-control" type="text" name="sender" placeholder="sender"
-                               ng-model="email_to_send.sender"/>
-                        <input class="form-control" type="text" name="cc" placeholder="cc"
-                               ng-model="email_to_send.cc"/>
-                        <input class="form-control" type="text" name="subject" placeholder="subject"
-                               ng-model="email_to_send.subject"/>
-                        <textarea class="form-control" name="body"
-                                  ng-model="email_to_send.body"> </textarea>
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">Send</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div-->
-
 
 <div class="modal fade" id="mail-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
      aria-hidden="true">
@@ -160,7 +121,5 @@
     </div>
 </div>
 
-
-<!--button ng-click="getToken(e.name,)">get token</button-->
 </div>
 

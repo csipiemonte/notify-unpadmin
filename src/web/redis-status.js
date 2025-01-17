@@ -8,10 +8,12 @@ app.controller("redis-status", function ($rootScope,$scope, $http, $interval,$wi
             $scope.queues["PRIORITY"] = {};
             $scope.queues["PRIORITY TO BE RETRIED"] = {};
             $scope.queues["BULK"] = {};
-            Object.keys(reply.data).filter(name => !name.endsWith("to_be_retried") && !name.includes("_priority") && !name.includes("bulk")).forEach(name => $scope.queues["STANDARD"][name] = reply.data[name]);
+            $scope.queues["DEAD"] = {};
+            Object.keys(reply.data).filter(name => !name.endsWith("to_be_retried") && !name.endsWith("dead") && !name.includes("_priority") && !name.includes("bulk")).forEach(name => $scope.queues["STANDARD"][name] = reply.data[name]);
             Object.keys(reply.data).filter(name => name.endsWith("to_be_retried") && !name.includes("_priority") && !name.includes("bulk")).forEach(name => $scope.queues["TO BE RETRIED"][name] = reply.data[name]);
             Object.keys(reply.data).filter(name => !name.endsWith("to_be_retried") && name.includes("_priority") && !name.includes("bulk")).forEach(name => $scope.queues["PRIORITY"][name] = reply.data[name]);
             Object.keys(reply.data).filter(name => name.endsWith("to_be_retried") && name.includes("_priority") && !name.includes("bulk")).forEach(name => $scope.queues["PRIORITY TO BE RETRIED"][name] = reply.data[name]);
+            Object.keys(reply.data).filter(name => name.endsWith("dead")).forEach(name => $scope.queues["DEAD"][name] = reply.data[name]);
             Object.keys(reply.data).filter(name => name.includes("bulk")).forEach(name => $scope.queues["BULK"][name] = reply.data[name]);
         }), ((error) => {
             $scope.showDivMessagge = true;
@@ -23,7 +25,14 @@ app.controller("redis-status", function ($rootScope,$scope, $http, $interval,$wi
 
     function getRedisMapLen() {
         $http.get("api/v1/status/redis/hm/length").then(((reply) => {
-            $scope.maps = reply.data;
+            $scope.maps = {};
+            $scope.retries_maps = {};
+            $scope.dead_maps = {};
+
+            Object.keys(reply.data).filter(name => !name.includes("retries") && !name.endsWith("dead")).forEach(name => $scope.maps[name] = reply.data[name]);
+            Object.keys(reply.data).filter(name => name.includes("retries") ).forEach(name => $scope.retries_maps[name] = reply.data[name]);
+            Object.keys(reply.data).filter(name => !name.includes("retries") && name.endsWith("dead")).forEach(name => $scope.dead_maps[name] = reply.data[name]);
+
         }), ((error) => {
             $scope.showDivMessagge = true;
             $scope.success = false;
@@ -54,6 +63,7 @@ app.controller("redis-status", function ($rootScope,$scope, $http, $interval,$wi
     $scope.$on('$destroy', function () {
         if (refreshRedisQueues) $interval.cancel(refreshRedisQueues);
         if (refreshRedisInfo) $interval.cancel(refreshRedisInfo);
+        if (refreshRedisHM) $interval.cancel(refreshRedisHM);
     });
 
     $scope.showMessageList = async function (queue_name) {

@@ -1,58 +1,56 @@
 <div class="col-sm-12" ng-controller="users">
 
-    <h3>Total users: {{users_count.count}}</h3>
-    <br>
+    <div class="counter-panel">
+        <div class="text-uppercase">
+            <strong>Total users: {{users_count.count}}</strong>
+        </div>
+    </div>
+    
     <div>
-        <div>
-            <table class="table">
-                <tr>
-                    <div>
-                        <label>ricerca puntuale per utente</label>
-                        <input class="form-control" type="text" ng-keypress="$event.which===13 && search()" placeholder="user id"
-                               ng-model="user_id">
-                        <button class="btn btn-primary pull-right" ng-click="search()">search</button>
-                        <br>
-                        <br>
+        <div class="filter-panel">
+            <div class="form-group">
+                
+                <div class="form-inline text-center">
+                    <label>Search per </label>
+                    <div class="form-group">
+                        <label for="">user ID</label>
+                            <input class="form-control" type="text" placeholder="GRTDPT32T23L219D" ng-model="user_id">
                     </div>
-                </tr>
-                <tr>
-                    <label>ricerca parametrica</label>
-                    <th class="text-right">
-                        Email
-                    </th>
-                    <td>
+                    <label>and</label>
+                    <div class="form-group">
+                        <label title="Tenant" class="control-label">tenant</label>
+                        <select class="form-control" ng-model="tenant" >
+                            <option ng-repeat="option in tenants" value="{{option}}">{{option}}</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" ng-click="search()">search</button>
+                </div>
+                <div class="form-inline text-center">
+                    <label>Search per </label>
+                    <div class="form-group">
+                        <label>email</label>
                         <input class="form-control" ng-keypress="$event.which===13 && searchUsers()" type="text"
-                               ng-model="params.filter.email.ci">
-                    </td>
-
-                    <th class="text-right">
-                        SMS
-                    </th>
-                    <td>
+                                ng-model="params.filter.email.ci" placeholder="user@example.com">
+                    </div>
+                
+                    <label>and/or</label>
+                    <div class="form-group">
+                        <label>SMS</label>
                         <input class="form-control" ng-keypress="$event.which===13 && searchUsers()" type="text"
-                               ng-model="params.filter.sms.eq">
-                    </td>
+                                ng-model="params.filter.sms.eq" placeholder="3005432121">
+                    </div>
 
-                </tr>
-                <tr>
-                    <td>
-                        <button class="btn btn-warning" ng-click="clear()">Clear</button>
-                    </td>
-                    <td></td>
-                    <td></td>
-                    <td>
-                        <button class="btn btn-primary pull-right" ng-click="searchUsers()">search users</button>
-                    </td>
-                </tr>
-            </table>
-
+                    <button class="btn btn-primary" ng-click="searchUsers()">search</button>
+                </div>
+            </div>
         </div>
 
         <div ng-show="users">
-            <input class="form-control" type="text" ng-model="f" placeholder="filter ...">
+            <input class="form-control" type="text" ng-model="f" placeholder="start type here to filter users list...">
             <table class=" table table-striped table-responsive table-hover">
                 <thead style="text-transform: uppercase;">
                 <tr>
+                    <th>tenant</th>
                     <th>user id</th>
                     <th>sms</th>
                     <th>email</th>
@@ -61,7 +59,8 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="user in users| filter:f">
-                    <td><a href="" ng-click="search(user.user_id)">{{user.user_id}}</a></td>
+                    <td>{{user.tenant}}</td>
+                    <td><a href="" ng-click="search(user.user_id, user.tenant)">{{user.user_id}}</a></td>
                     <td>{{user.sms}}</td>
                     <td>{{user.email}}</td>
                     <td dd-text-collapse dd-text-collapse-max-length="20" dd-text-collapse-text="{{user.push}}"></td>
@@ -69,18 +68,15 @@
                 </tbody>
             </table>
             <div class="row">
-                <div class="col-sm-2">
-                    <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="choose(1)"><<</button>
-                    <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="prec()"><</button>
+                <div class="col-sm-offset-3 col-sm-2">
+                    <button class="btn btn-default btn-sm" ng-show="currentPage > 1" ng-click="choose(1)"><span class="glyphicon glyphicon-fast-backward" aria-hidden="true"></span></button>
+                    <button class="btn btn-default btn-sm" ng-show="currentPage > 1" ng-click="prec()"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
                 </div>
-                <div class="col-sm-3 text-center">{{currentPage | number}} di {{totalPages | number}}</div>
+                <div class="col-sm-2 text-center">Page {{currentPage | number}} of {{totalPages | number}}<br>{{total_elements | number}} record(s)</div>
                 <div class="col-sm-2">
-                    <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="succ()">></button>
-                    <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages"
-                            ng-click="choose(totalPages)">>>
-                    </button>
+                    <button class="btn btn-default btn-sm" ng-show="currentPage < totalPages" ng-click="succ()"><span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span></button>
+                    <button class="btn btn-default btn-sm" ng-show="currentPage < totalPages" ng-click="choose(totalPages)"><span class="glyphicon glyphicon-fast-forward" aria-hidden="true"></span></button>
                 </div>
-                record: {{total_elements | number}}
             </div>
         </div>
     </div>
@@ -89,13 +85,12 @@
         <div ng-show="showDivMessagge" class="alert" ng-class="'alert-danger'" role="alert">
             <span data-ng-bind-html="resultMessage"></span>
         </div>
-        <div ng-show="userNotify" class="jumbotron">
-            <div class="modal-body">
-                <div class="form-group">
-                    <pre pretty-json="userNotify"></pre>
-                </div>
-            </div>
 
+        <div ng-show="userNotify">
+            <p class="text-uppercase" style="color: #9c9a9a;font-size: large;"><strong>User details</strong></p>
+            <pre pretty-json="userNotify"></pre>
+
+            <p class="text-uppercase" style="color: #9c9a9a;font-size: large;"><strong>User preferences</strong></p>
             <table class=" table table-striped table-responsive table-hover">
                 <thead>
                 <tr>
@@ -111,7 +106,6 @@
                 </tr>
                 </tbody>
             </table>
-
 
         </div>
     </div>

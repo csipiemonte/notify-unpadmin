@@ -1,11 +1,10 @@
 app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $timeout) {
 
-    $scope.params =
-        {
-            sort: "-created_at",
-            limit: 10,
-            offset: 0
-        };
+    $scope.params = {
+        sort: "-created_at",
+        limit: 10,
+        offset: 0
+    };
 
     $scope.params.filter = typeof $location.search().filter === "object" ? $location.search().filter : {};
     //$scope.selectedSource = $scope.params.filter.source ? $scope.params.filter.source.eq : null;
@@ -22,6 +21,9 @@ app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $t
         $scope.sources = reply.data;
     });
 
+    $http.get("api/v1/tenants").then((result) => {
+        $scope.tenants = result.data.map(e => e.name);
+    });
 
     $scope.set_dates = function (k, n) {
         $scope.params.filter.created_at = {};
@@ -51,8 +53,8 @@ app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $t
         if (params.filter.created_at) {
             params.filter.created_at.gte = new Date(params.filter.created_at.gte);
             params.filter.created_at.lte = new Date(params.filter.created_at.lte);
-            params.filter.created_at.gte.setMinutes(params.filter.created_at.gte.getMinutes() - params.filter.created_at.gte.getTimezoneOffset());
-            params.filter.created_at.lte.setMinutes(params.filter.created_at.lte.getMinutes() - params.filter.created_at.lte.getTimezoneOffset());
+            // params.filter.created_at.gte.setMinutes(params.filter.created_at.gte.getMinutes() - params.filter.created_at.gte.getTimezoneOffset());
+            // params.filter.created_at.lte.setMinutes(params.filter.created_at.lte.getMinutes() - params.filter.created_at.lte.getTimezoneOffset());
         }
 
         $http.get("api/v1/events/_page", {params: params}).then((reply) => {
@@ -61,10 +63,7 @@ app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $t
             $scope.currentPage = reply.data.current_page;
             $scope.total_elements = reply.data.total_elements;
         });
-
-
     };
-
 
     $scope.createReportCSV = function () {
 
@@ -160,7 +159,6 @@ app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $t
             }));
     };
 
-
     $scope.openModal = function (title, object, event) {
         $scope.title = title;
         $scope.event = event;
@@ -181,7 +179,6 @@ app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $t
         if ($scope.params.offset > 0) $scope.params.offset -= $scope.params.limit;
         $scope.search();
     };
-
 
     $scope.choose = function (numPage) {
 
@@ -249,4 +246,6 @@ app.controller("events", function ($scope, $http, FileSaver, Blob, $location, $t
         $scope.params.filter = {};
     }
     $scope.search();
+
+    $location.search('filter', null);
 });

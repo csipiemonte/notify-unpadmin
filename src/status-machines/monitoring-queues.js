@@ -24,12 +24,12 @@ async function initFile(){
   try{
     lastMessage = JSON.parse(await fs.readFileSync(lastMessagePath));
   }catch(e){
-    logger.debug(e);
+    logger.debug(JSON.stringify(e));
   }
   try{
     oldResult = JSON.parse(await fs.readFileSync(oldResultPath));
   }catch(e){
-    logger.debug(e);
+    logger.debug(JSON.stringify(e));
   }
 }
 
@@ -59,14 +59,14 @@ async function execute(){
         await sendMail(environment + " ENVIRONMENT\n\nThese queues are not working: " + Object.keys(result).filter(ch => result[ch] === false).join(",") );
       }
   }catch(e){
-    logger.error("email not sent:",e);
+    logger.error("email not sent: ", e.message);
   }
   oldResult = result;
   try{
     await writeFile(oldResultPath,JSON.stringify(oldResult));
     process.exit(0);
   }catch(e){
-    logger.error(e);
+    logger.error(JSON.stringify(e));
     process.exit(1);
   }
 
@@ -87,7 +87,7 @@ async function checkStatus(ch){
       try{
         await writeFile(lastMessagePath,JSON.stringify(lastMessage));
       }catch(e){
-        logger.error(e);
+        logger.error(JSON.stringify(e));
       }
       return true;
     }
@@ -96,7 +96,7 @@ async function checkStatus(ch){
     try{
       await writeFile(lastMessagePath,JSON.stringify(lastMessage));
     }catch(e){
-      logger.error(e);
+      logger.error(JSON.stringify(e));
     }
     return true;
 }
@@ -106,13 +106,13 @@ async function sendMail(text) {
   destinatari = destinatari.split("\n").join(",");
   try {
     let mail = {
-      from: "notify@mydomain.it",
+      from: "noreply.notify@csi.it",
       to: destinatari,
       subject: environment + " ENVIRONMENT: check status queus redis",
       text: text
     }
     await transporter.sendMail(mail);
   } catch (e) {
-    logger.error(e);
+    logger.error(JSON.stringify(e));
   }
 }

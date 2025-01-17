@@ -11,6 +11,7 @@ app.controller("menu", function ($rootScope,$scope, $location,$http) {
 
     $http.get("api/v1/destinatari").then((reply) => {
         $rootScope.destinatari = reply.data;
+    }).catch(function(e) {
     });
 
     $scope.currentPage = $location.search()["currentPage"];

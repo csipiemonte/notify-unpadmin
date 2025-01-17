@@ -1,22 +1,15 @@
-app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$timeout) {
+app.controller("mex", function ($scope, $http, $filter, FileSaver, Blob, $location, $timeout) {
 
-    /*$scope.user_id_to_delete = "";
-    $scope.uuid_to_delete = "";*/
-
-    $scope.params =
-        {
-            filter: {
-                id:{
-                }
-            },
-            sort: "-timestamp",
-            limit: 10,
-            offset: 0
-        };
-
+    $scope.params = {
+        filter: {
+            id:{}
+        },
+        sort: "-timestamp",
+        limit: 10,
+        offset: 0
+    };
 
     if($location.search().mex_id) $scope.params.filter.id.eq = $location.search().mex_id;
-
 
     $scope.set_dates = function(k, n)
     {
@@ -39,16 +32,18 @@ app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$
         $scope.search();
     }
 
-    /*$scope.params.filter.timestamp = {
-        gte: new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours() - 1, d.getMinutes(), d.getSeconds()),
-        lte: new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds())
-    };*/
-
     $http.get("api/v1/messages/senders").then((reply) => {$scope.senders = reply.data;});
+
+    $http.get("api/v1/tenants").then((result) => {
+        $scope.tenants = result.data.map(e => e.name);
+    });
 
     $scope.search = function () {
         if ($scope.selectedSender !== "") $scope.params.filter.sender = {eq: $scope.selectedSender};
         else delete $scope.params.filter.sender;
+
+        if ($scope.selectedTenant !== "") $scope.params.filter.tenant = {eq: $scope.selectedTenant};
+        else delete $scope.params.filter.tenant;
 
         $scope.params.filter = semplify($scope.params.filter);
 
@@ -60,31 +55,32 @@ app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$
         if (params.filter.timestamp) {
             params.filter.timestamp.gte = new Date(params.filter.timestamp.gte);
             params.filter.timestamp.lte = new Date(params.filter.timestamp.lte);
-            params.filter.timestamp.gte.setMinutes(params.filter.timestamp.gte.getMinutes() - params.filter.timestamp.gte.getTimezoneOffset());
-            params.filter.timestamp.lte.setMinutes(params.filter.timestamp.lte.getMinutes() - params.filter.timestamp.lte.getTimezoneOffset());
+            // params.filter.timestamp.gte.setMinutes(params.filter.timestamp.gte.getMinutes() - params.filter.timestamp.gte.getTimezoneOffset());
+            // params.filter.timestamp.lte.setMinutes(params.filter.timestamp.lte.getMinutes() - params.filter.timestamp.lte.getTimezoneOffset());
         }
-        $http.get("api/v1/messages/_page", {params: params}).then((reply) => {
-            $scope.messages = reply.data.list;
-            $scope.totalPages = reply.data.total_pages;
-            $scope.currentPage = reply.data.current_page;
-            $scope.pageSize = reply.data.page_size;
-            $scope.total_elements = reply.data.total_elements;
-            $scope.params.filter.id = {};
-        });
-
+        $http.get("api/v1/messages/_page", {params: params})
+            .then((reply) => {
+                $scope.messages = reply.data.list;
+                $scope.totalPages = reply.data.total_pages;
+                $scope.currentPage = reply.data.current_page;
+                $scope.pageSize = reply.data.page_size;
+                $scope.total_elements = reply.data.total_elements;
+                if($scope.params.filter && $scope.params.filter.id && $scope.params.filter.id.ci) {
+                    $scope.params.filter.id.eq = $scope.params.filter.id.ci;
+                    delete $scope.params.filter.id.ci;
+                }
+            }
+        );
     };
 
-
     $scope.createReportCSV = function () {
-
-
-
         $scope.params.filter = semplify($scope.params.filter);
 
         if ($scope.selectedSender !== "") $scope.params.filter.sender = {eq: $scope.selectedSender};
         else delete $scope.params.filter.sender;
 
-        $http.get("api/v1/report/csv/messages", {params: $scope.params, responseType: 'arraybuffer'}).then(((reply) => {
+        $http.get("api/v1/report/csv/messages", {params: $scope.params, responseType: 'arraybuffer'}).then(
+            ((reply) => {
 
                 if (reply.status === 204) {
                     // if there is no content
@@ -117,20 +113,18 @@ app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$
 
                 $scope.success = false;
                 $scope.resultMessage = error.data;
-            }));
+            })
+        );
     };
 
-
     $scope.createReportExcel = function () {
-
-
-
         $scope.params.filter = semplify($scope.params.filter);
 
         if ($scope.selectedSender !== "") $scope.params.filter.sender = {eq: $scope.selectedSender};
         else delete $scope.params.filter.sender;
 
-        $http.get("api/v1/report/excel/messages", {params: $scope.params, responseType: 'arraybuffer'}).then(((reply) => {
+        $http.get("api/v1/report/excel/messages", {params: $scope.params, responseType: 'arraybuffer'}).then(
+            ((reply) => {
 
                 if (reply.status === 204) {
                     // if there is no content
@@ -164,9 +158,9 @@ app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$
 
                 $scope.success = false;
                 $scope.resultMessage = error.data;
-            }));
+            })
+        );
     };
-
 
     $scope.succ = function () {
         //if($scope.currentPage >= $scope.totalPages) return;
@@ -179,22 +173,20 @@ app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$
         $scope.search();
     };
 
-
     $scope.openModal = function (mex) {
-        try{
+        try {
             $scope.mex = JSON.parse(mex)
-        }catch(e){
+        } catch(e) {
             $scope.mex = mex;
         }
     };
 
     $scope.choose = function (numPage) {
-
         $scope.currentPage = numPage;
-        $scope.params.offset = $scope.params.limit * (numPage -1);
-        //if ($scope.params.offset > 0) $scope.params.offset -= $scope.params.limit;
+        $scope.params.offset = $scope.params.limit * (numPage - 1);
         $scope.search();
     };
+
     /**
      * convert message taken from db to message well formatted
      * @param m message to  format
@@ -236,5 +228,7 @@ app.controller("mex", function ($scope, $http,$filter,FileSaver,Blob,$location,$
         return x;
     }
 
-    $scope.search();
+    if($location.search().mex_id) $scope.search();
+    
+    $location.search('mex_id', null);
 });

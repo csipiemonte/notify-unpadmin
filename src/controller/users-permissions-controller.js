@@ -12,10 +12,10 @@ var bodyParser = require('body-parser');
 
 router.use(bodyParser.json());
 
-
 router.get('/', async function (req, res, next) {
-    logger.debug("called GET users-permissions/");
+    
     let filter = req.query.filter ? req.query.filter : {};
+    logger.debug("called GET /users-permissions, filter:", filter);
 
     try {
         var sql = buildQuery.select().table("users_permissions").filter(filter).sql;
@@ -33,7 +33,7 @@ router.get('/', async function (req, res, next) {
 });
 
 router.get('/:user_cf', async function (req, res, next) {
-    logger.debug("called GET users_permissions/" + req.params.user_cf);
+    logger.debug("called GET /users_permissions/%s", req.params.user_cf);
     try {
         var sql = buildQuery.select().table("users_permissions").filter({cf: {"eq": req.params.user_cf}}).sql;
     } catch (err) {
@@ -50,9 +50,9 @@ router.get('/:user_cf', async function (req, res, next) {
 });
 
 router.put('/:user_cf', async function (req, res, next) {
-    logger.debug("called PUT users_permissions/" + req.params.user_cf, JSON.stringify(req.body));
-
+    
     var user = req.body;
+    logger.debug("called PUT /users_permissions/%s, body: %s", req.params.user_cf, JSON.stringify(user));
 
     var deleteSql = buildQuery.delete().table("users_permissions").filter({cf: {"eq": user.cf}}).sql;
     var insertSql = buildQuery.insert().table("users_permissions")
@@ -70,12 +70,12 @@ router.put('/:user_cf', async function (req, res, next) {
 });
 
 router.delete('/:user_cf', async function (req, res, next) {
-    logger.debug("called DELETE users_permissions/" + req.params.user_cf);
-
+    
+    logger.debug("called DELETE /users_permissions/%s", req.params.user_cf);
 
     var deleteSql = buildQuery.delete().table("users_permissions").filter({cf: {"eq": req.params.user_cf}}).sql;
+    console.log("sql delete user:", deleteSql);
 
-    console.log(deleteSql)
     try {
         var result = await multiple_db.unpadmin.execute(deleteSql);
     } catch (err) {

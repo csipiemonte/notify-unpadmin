@@ -30,11 +30,33 @@
       "connectionTimeoutMillis": 5000,
       "schema": "unpevents"
     },
+    "eventsarchive": {
+      "host": "localhost",
+      "user": "postgres",
+      "port": 5433,
+      "password": "postgres",
+      "database": "NOTIFICATOREDB_STORICO",
+      "max": 20,
+      "idleTimeoutMillis": 30000,
+      "connectionTimeoutMillis": 5000,
+      "schema": "unpevents"
+    },
     "audit": {
       "host": "localhost",
       "user": "postgres",
       "password": "postgres",
       "database": "NOTIFICATOREDB",
+      "max": 20,
+      "idleTimeoutMillis": 30000,
+      "connectionTimeoutMillis": 5000,
+      "schema": "unpaudit"
+    },
+    "auditarchive": {
+      "host": "localhost",
+      "user": "postgres",
+      "port": 5433,
+      "password": "postgres",
+      "database": "NOTIFICATOREDB_STORICO",
       "max": 20,
       "idleTimeoutMillis": 30000,
       "connectionTimeoutMillis": 5000,
@@ -49,6 +71,19 @@
       "idleTimeoutMillis": 30000,
       "connectionTimeoutMillis": 5000,
       "schema": "unpmex"
+    }
+  },
+  "db_cleanup_policy": {
+    "events":{
+      "online": "1K",
+      "offline": "10d"
+    },
+    "audit":{
+      "online": "1K",
+      "offline": "10d"
+    },
+    "mex":{
+      "online": "1m"
     }
   },
   "security": {
@@ -81,7 +116,10 @@
     "hosts": [
       "localhost"
     ],
-    "master_hosts": [
+    "mbhosts": [
+      "localhost"
+    ],
+    "masterhosts": [
       "localhost"
     ]
   }

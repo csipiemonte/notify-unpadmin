@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css"/>
 <link rel="stylesheet" href="./css/custom.css"/>
 <link rel="stylesheet" href="./css/components.css"/>
+
 <script src="./bower_components/jquery/dist/jquery.min.js"></script>
 <script src="./bootstrap/js/bootstrap.min.js"></script>
 <script src="./bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
@@ -15,6 +16,8 @@
 <script src="./bower_components/angular-file-saver/dist/angular-file-saver.bundle.min.js"></script>
 <script src="./bower_components/angular-sanitize/angular-sanitize.js"></script>
 <script src="./bower_components/angular-spinner/dist/angular-spinner.min.js"></script>
+<script src="./bower_components/chart.js/dist/Chart.min.js"></script>
+<script src="./bower_components/angular-chart.js/dist/angular-chart.min.js"></script>
 <link rel="stylesheet" type="text/css" href="./bower_components/ng-prettyjson/dist/ng-prettyjson.min.css">
 <script type="text/javascript" src="./bower_components/ng-prettyjson/dist/ng-prettyjson.min.js"></script>
 <script type="text/javascript" src="./bower_components/ng-prettyjson/src/ace.js" charset="utf-8"></script>
@@ -29,7 +32,7 @@
 
 <script>
     var root = null;
-    var app = angular.module("app", ['ui.bootstrap', 'ngclipboard', 'ngSanitize', 'ngPrettyJson', 'checklist-model', 'angularSpinner', 'angular-jwt', 'mdo-angular-cryptography', 'ngFileSaver']).run(function ($rootScope, $http,$window) {
+    var app = angular.module("app", ['ui.bootstrap', 'ngclipboard', 'ngSanitize', 'ngPrettyJson', 'checklist-model', 'angularSpinner', 'angular-jwt', 'mdo-angular-cryptography', 'ngFileSaver', 'chart.js']).run(function ($rootScope, $http,$window) {
         new Clipboard('.btn');
 
         $rootScope.Utils = {
@@ -65,7 +68,7 @@
 
     app.config(['$httpProvider', function ($httpProvider) {
         $httpProvider.interceptors.push(function ($q) {
-            let eccezioni = ["api/v1/status/redis/info","api/v1/status/redis/queues","api/v1/status/redis/hm/length", "api/v1/status/monitor"];
+            let eccezioni = ["api/v1/status/redis/info","api/v1/status/redis/queues","api/v1/status/redis/hm/length", "api/v1/status/monitor", "api/v1/status/monitor-mb"];
             return {
                 'request': function (config) {
                     if (!eccezioni.includes(config.url)) root.spinner = !root.spinner || root.spinner === null?root.spinner =1 : root.spinner + 1;
@@ -225,6 +228,8 @@
 <script src="preferences-console.js"></script>
 <script src="templates.js"></script>
 <script src="blacklist.js"></script>
+<script src="tags.js"></script>
+<script src="tenants.js"></script>
 
 <body ng-app="app" ng-controller="menu">
 <nav class="navbar navbar-inverse navbar-fixed-top row">
@@ -248,9 +253,8 @@
         <div id="navbar" class="collapse navbar-collapse">
 
             <ul class="nav navbar-nav" style="padding-top: 20px;font-size: 14px">
-                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('preferences-services')}"><a href=""
-                                                                              ng-click="go('preferences-services')">Services</a>
-                </li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('tenants')}"><a href="" ng-click="go('tenants')">Tenants</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('preferences-services')}"><a href="" ng-click="go('preferences-services')">Services</a></li>
                 <!--li ng-class="{ active: isActive('clients')}"><a href="" ng-click="go('clients')">Clients</a></li-->
                 <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('users')}"><a href="" ng-click="go('users')">Users</a></li>
                 <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('events')}"><a href="" ng-click="go('events')">Events</a></li>
@@ -258,12 +262,12 @@
                 <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('mex')}"><a href="" ng-click="go('mex')">Messages</a></li>
                 <li ng-show="(!user || user === '') || (user.roles.includes('operation') )" ng-class="{ active: isActive('server-status')}"><a href="" ng-click="go('server-status')">Server</a></li>
                 <li ng-show="(!user || user === '') || (user.roles.includes('operation') )" ng-class="{ active: isActive('redis-status')}"><a href="" ng-click="go('redis-status')">Redis</a></li>
-                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('statistic-events')}"><a href="" ng-click="go('statistic-events')">Statistic</a>
-                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('preferences-console')}"><a href="" ng-click="go('preferences-console')">Preferences</a>
-                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('utilities')}"><a href="" ng-click="go('utilities')">Utilities</a>
-                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('templates')}"><a href="" ng-click="go('templates')">Templates</a>
-                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('blacklist')}"><a href="" ng-click="go('blacklist')">Blacklist</a>
-                </li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('statistic-events')}"><a href="" ng-click="go('statistic-events')">Statistic</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('preferences-console')}"><a href="" ng-click="go('preferences-console')">Preferences</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('utilities')}"><a href="" ng-click="go('utilities')">Utilities</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('templates')}"><a href="" ng-click="go('templates')">Templates</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('blacklist')}"><a href="" ng-click="go('blacklist')">Blacklist</a></li>
+                <li ng-show="(!user || user === '') || (user.roles.includes('admin') )" ng-class="{ active: isActive('tags')}"><a href="" ng-click="go('tags')">Tags</a></li>
             </ul>
 
         </div><!--/.nav-collapse -->

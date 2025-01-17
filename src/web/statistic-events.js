@@ -16,7 +16,7 @@ app.controller("statistic-events", function ($scope, $http, $filter, $location) 
 
 
 
-    $scope.goToEvents = function(value,t) {
+    $scope.goToEvents = function(value, t) {
         var filter = {};
 
         let lte = new Date($scope.lte);
@@ -43,6 +43,9 @@ app.controller("statistic-events", function ($scope, $http, $filter, $location) 
         }
         filter.payload = {
             ci : value.sender
+        }
+        filter.tenant = {
+            eq : value.tenant
         }
         $scope.go('events',{
             filter: filter
@@ -71,6 +74,7 @@ app.controller("statistic-events", function ($scope, $http, $filter, $location) 
                 .reduce((r, e) => {
                     let k = [e.sender + "-" + e.source];
                     if (!r[k]) r[k] = {
+                        "tenant": e.tenant,
                         "sender": e.sender,
                         "source": e.source,
                         "types": {}

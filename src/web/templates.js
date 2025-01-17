@@ -24,17 +24,17 @@ app.controller("templates", function ($rootScope, $scope, $http,FileSaver, Blob)
     }
 
     $scope.delete = async function(key) {
-        if (!confirm("delete template?")) return;
+        if (!confirm("Delete the template?")) return;
         try {
             await $http.delete("api/v1/redis/keys/mb:template:email/" + key);
             search();
             $scope.showDivMessagge = true;
             $scope.success = true;
-            $scope.resultMessage = "template email deleted";
+            $scope.resultMessage = "Email template successfully deleted!";
         }catch(error) {
             $scope.showDivMessagge = true;
             $scope.success = false;
-            $scope.resultMessage = "Error deleting template email: " + JSON.stringify(error);
+            $scope.resultMessage = "Error deleting email template: " + JSON.stringify(error);
         }
     }
 

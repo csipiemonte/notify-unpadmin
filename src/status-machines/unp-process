@@ -8,14 +8,14 @@ if [ "$OPERATION" == "force_stop" ]
 then
     #PID=$(ps aux | grep node | grep $PROCESS | grep -v grep | awk '{ print $2 }')
     #kill -9 $PID
-    pm2 stop /appsrv/unp/notify/ecosystem.config.js --only $MODULE_NAME
+    pm2 stop /appserv/unp/notify/notify-ecosystem.config.js --only $MODULE_NAME
     exit 0
 fi
 if [ "$OPERATION" == "stop" ]
 then
     #PID=$(ps aux | grep node | grep $PROCESS | grep -v grep | awk '{ print $2 }')
     #kill $PID
-    pm2 stop /appsrv/unp/notify/ecosystem.config.js --only $MODULE_NAME
+    pm2 stop /appserv/unp/notify/notify-ecosystem.config.js --only $MODULE_NAME
     exit 0
 fi
 if [ "$OPERATION" == "start" ]
@@ -29,7 +29,7 @@ then
     #PROCESS_NAME=$(echo $PROCESS | awk -F '.' '{print $1}')
     #cd
     #bash notify/$PROCESS_NAME/$PROCESS_NAME &
-    pm2 restart /appsrv/unp/notify/ecosystem.config.js --only $MODULE_NAME --update-env
+    pm2 restart /appserv/unp/notify/notify-ecosystem.config.js --only $MODULE_NAME --update-env
     exit 0
 fi
 exit 1

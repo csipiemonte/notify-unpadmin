@@ -1,18 +1,16 @@
 <div class="col-sm-12" ng-controller="statistic-events">
-    <br><br>
-    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger' " role="alert">
-        {{resultMessage}}
-    </div>
 
-    <div class="row form-inline">
-
-        <label>Date</label>
-        <input type="date" class="form-control"
-               ng-model="gte"
-               placeholder="dd/MM/yyyy"/>
-        <input type="date" class="form-control"
-               ng-model="lte"
-               placeholder="dd/MM/yyyy"/>
+    <div class="filter-panel">
+    <div class="form-inline text-center">
+        <div class="form-group">
+            <label>date</label>
+            <input type="date" class="form-control"
+                ng-model="gte"
+                placeholder="dd/MM/yyyy"/>
+            <input type="date" class="form-control"
+                ng-model="lte"
+                placeholder="dd/MM/yyyy"/>
+        </div>
         <button class="btn btn-success" ng-click="search()">search</button>
         <button class="btn btn-primary" ng-click="set_dates(1e4, 0)">all</button>
         <button class="btn btn-primary" ng-click="set_dates(0, 0)">today</button>
@@ -21,14 +19,19 @@
         <button class="btn btn-primary" ng-click="set_dates(30, 0)">last 30 days</button>
         <button class="btn btn-primary" ng-click="set_dates(from_begin_year(), 0)">this year</button>
     </div>
+    </div>
 
-    <div >
-        <br>
-        <input class="form-control"  type="text" ng-model="f" placeholder="filter ...">
-        <table class=" table table-bordered table-striped table-responsive table-hover">
+    <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger' " role="alert">
+        {{resultMessage}}
+    </div>
+
+    <div>
+        <input class="form-control" type="text" ng-model="f" placeholder="start type here to filter statistics list...">
+        <table class=" table table-striped table-responsive table-hover">
             <thead>
             <tr>
                 <th></th>
+                <th>Tenant</th>
                 <th>Service</th>
                 <th>Source</th>
                 <th ng-repeat="t in types">{{t}}</th>
@@ -39,12 +42,13 @@
             <tr ng-repeat="value in statistic| filter:f">
                 <td><button class="btn btn-sm" ng-click="historicize(value)">Archive</button>
                 </td>
+                <td>{{value.tenant}}</td>
                 <td>{{value.sender}}</td>
                 <td>{{value.source}}</td>
                 <td ng-repeat="t in types"><a ng-click="goToEvents(value,t)" ng-show="t != 'OLD_SYSTEM_ERROR'" href="">{{value.types[t]}}</a><div ng-show="t == 'OLD_SYSTEM_ERROR'">{{value.types[t]}}</div></td>
             </tr>
             </tbody>
         </table>
-        <br><br>
+
     </div>
 </div>

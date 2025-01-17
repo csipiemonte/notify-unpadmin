@@ -62,6 +62,8 @@ router.get('/messages', async function (req, res,next) {
     let csv = json2csvParser.parse(result);
 
     res.attachment("messages_" + Utility.getDateFormatted(new Date()) + ".csv");
+    /*res.setHeader('Content-disposition', 'attachment; filename=prova.csv');
+    res.set('Content-Type', 'text/csv');*/
     return next({type: "ok", status: 200, message: csv});
 
 });
@@ -92,8 +94,12 @@ router.get('/events', async function (req, res,next) {
     let csv = json2csvParser.parse(result);
 
     res.attachment("events_" + Utility.getDateFormatted(new Date()) + ".csv");
+    /*res.setHeader('Content-disposition', 'attachment; filename=prova.csv');
+    res.set('Content-Type', 'text/csv');*/
     return next({type: "ok", status: 200, message: csv});
 
 });
+
+
 
 module.exports = router;

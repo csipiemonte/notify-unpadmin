@@ -28,12 +28,7 @@ app.controller("preferences_console", function ($scope, $http,$location) {
 
     }
 
-    $scope.getUsersFromServices = function(service_name,channel){
-        //if(service_name) $scope.params.filter['us.service_name']= {eq : service_name};
-        //if(channel) $scope.params.filter['us.channels'] = {ci : channel};
-
-        console.log($scope.params.filter)
-
+    $scope.getUsersFromServices = function(service_name, tenant, channel){
         $scope.params.filter = semplify($scope.params.filter);
 
         $http.get("api/v1/preferences/users/_page",{params: $scope.params}).then((reply => {
@@ -43,9 +38,10 @@ app.controller("preferences_console", function ($scope, $http,$location) {
             $scope.total_elements = reply.data.total_elements;
             $scope.users_service_name = service_name;
             $scope.users_channel = channel;
+            $scope.users_tenant = tenant;
         }), (error => {
             $scope.showDivMessagge = true;
-            $scope.resultMessage = error.data;
+            $scope.resultMessage = JSON.stringify(error.data);
         }));
     }
 
@@ -78,8 +74,8 @@ app.controller("preferences_console", function ($scope, $http,$location) {
         $scope.getUsersFromServices();
     };
 
-    $scope.openTermsModal = function(user_id){
-        $http.get("api/v1/preferences/terms",{params:{user_id:user_id}}).then((result => {
+    $scope.openTermsModal = function(user_id, tenant){
+        $http.get("api/v1/preferences/terms",{params:{user_id: user_id, tenant: tenant}}).then((result => {
             $scope.terms = result.data;
         }), (error => {
             $scope.showDivMessagge = true;
@@ -87,8 +83,8 @@ app.controller("preferences_console", function ($scope, $http,$location) {
         }));
     }
 
-    $scope.openHistoryModal = function(user_id){
-        $http.get("api/v1/preferences/users/" + user_id + "/contacts/history",{params:{user_id:user_id}}).then((result => {
+    $scope.openHistoryModal = function(user_id, tenant){
+        $http.get("api/v1/preferences/users/" + user_id + "/contacts/history",{params:{user_id: user_id, tenant: tenant}}).then((result => {
             $scope.users_history = result.data;
         }), (error => {
             $scope.showDivMessagge = true;

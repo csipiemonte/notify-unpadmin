@@ -27,7 +27,7 @@ app.controller("preferences-service", function ($scope, $http, $location) {
         $scope.showDivMessagge = true;
 
         $scope.success = false;
-        let errorMessage = "Error while set preferences services: " + error.data;
+        let errorMessage = "Error while set preferences services: " + error.status + " " + error.statusText;
         $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
     }));
 

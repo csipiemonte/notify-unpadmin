@@ -23,7 +23,7 @@ app.controller("blacklist", function ($rootScope, $scope, $http) {
     }
 
     $scope.delete = async function(key) {
-        if (!confirm("delete from blacklist?")) return;
+        if (!confirm("Delete the token from the blacklist?")) return;
         try {
             await $http.delete("api/v1/redis/keys/mb:blacklist/" + key);
             search();

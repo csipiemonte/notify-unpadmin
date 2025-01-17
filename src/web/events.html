@@ -1,122 +1,99 @@
 <div class="col-sm-12" ng-controller="events">
 
-
-    <!--input class =" form-control" type="text" id="searchNames" placeholder="Search for client names.." title="Type in a name"-->
-
-    <table class="table">
-        <tr>
-            <th class="text-right">
-                Msg uuid
-            </th>
-            <td>
+    <div class="filter-panel">
+        <div class="row">
+            <div class="col-sm-3 form-group">
+                <label>msg UUID</label>
                 <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
-                       placeholder="message uuid" ng-model="params.filter.msg_uuid.eq">
-            </td>
+                    placeholder="d2fd0abf-fb38-4353-a128-8604bcdffadf" ng-model="params.filter.msg_uuid.eq">
+            </div>
 
-            <th class="text-right">
-                Bulk ID
-            </th>
-            <td>
+            <div class="col-sm-3 form-group">
+                <label>bulk ID</label>
                 <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
-                       placeholder="bulk id" ng-model="params.filter.bulk_id.ci">
+                        placeholder="395670bd-e511-40f1-9132-79615386b50b" ng-model="params.filter.bulk_id.ci">
+            </div>
 
-            </td>
-
-            <th class="text-right">
-                User_id
-            </th>
-            <td>
+            <div class="col-sm-3 form-group">
+                <label>user ID</label>
                 <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
-                       placeholder="user id" ng-model="params.filter.user_id.eq">
-
-            </td>
-
-            <th class="text-right">
-                Payload
-            </th>
-            <td>
+                        placeholder="AAABBB23B47L219X" ng-model="params.filter.user_id.eq">
+            </div>
+            <div class="col-sm-3 form-group">
+                <label>payload</label>
                 <input class="form-control" ng-keypress="$event.which===13 && search()" type="text"
-                       placeholder="payload" ng-model="params.filter.payload.ci">
-
-            </td>
-        </tr>
-        <tr>
-            <th class="text-right">
-                Date
-            </th>
-            <td>
+                        placeholder="something" ng-model="params.filter.payload.ci">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3 form-group">
+                <label>date</label>
                 <input type="datetime-local" class="form-control"
-                       ng-model="params.filter.created_at.gte"/>
+                    ng-model="params.filter.created_at.gte"/>
                 <input type="datetime-local" class="form-control"
-                       ng-model="params.filter.created_at.lte"/>
+                    ng-model="params.filter.created_at.lte"/>
 
-            </td>
-
-            <th class="text-right">
-                Source
-            </th>
-            <td>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label>source</label>
                 <select class="form-control" ng-model="params.filter.source.eq"
-                        ng-options="source for source in sources">
-                    <option value="">(source)</option>
-                </select>
-            </td>
+                            ng-options="source for source in sources">
+                        <option value="">(source)</option>
+                    </select>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label>type</label>
+                    <select class="form-control" ng-model="params.filter.type.eq" ng-options="type for type in types">
+                        <option value="">(type)</option>
+                    </select>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label>tenant</label>
+                    <select class="form-control" ng-model="params.filter.tenant.eq" ng-options="tenant for tenant in tenants">
+                        <option value="">(tenant)</option>
+                    </select>
+            </div>
 
+        </div>
 
-            <th class="text-right">
-                Type
-            </th>
-            <td>
-                <select class="form-control" ng-model="params.filter.type.eq" ng-options="type for type in types">
-                    <option value="">(type)</option>
-                </select>
-            </td>
-        </tr>
-
-    </table>
-
-    <div class="col-sm-12" style="margin-top:10px;">
-        <button class="btn btn-primary" ng-click="set_dates(1e4, 0)">all</button>
-        <button class="btn btn-primary" ng-click="set_dates(0, 0)">today</button>
-        <button class="btn btn-primary" ng-click="set_dates(1, 1)">yesterday</button>
-        <button class="btn btn-primary" ng-click="set_dates(7, 0)">last 7 days</button>
-        <button class="btn btn-primary" ng-click="set_dates(30, 0)">last 30 days</button>
-        <button class="btn btn-primary" ng-click="set_dates(from_begin_year(), 0)">this year</button>
-        <button class="btn btn-primary" ng-click="set_dates(1e4,7)">older than 7 days</button>
-        <button class="btn btn-primary" ng-click="set_dates(1e4,30)">older than 30 days</button>
+        <div class="row text-center">
+            <button class="btn btn-success" ng-click="search()">search</button>
+            <button class="btn btn-primary" ng-click="set_dates(1e4, 0)">all</button>
+            <button class="btn btn-primary" ng-click="set_dates(0, 0)">today</button>
+            <button class="btn btn-primary" ng-click="set_dates(1, 1)">yesterday</button>
+            <button class="btn btn-primary" ng-click="set_dates(7, 0)">last 7 days</button>
+            <button class="btn btn-primary" ng-click="set_dates(30, 0)">last 30 days</button>
+            <button class="btn btn-primary" ng-click="set_dates(from_begin_year(), 0)">this year</button>
+            <button class="btn btn-primary" ng-click="set_dates(1e4,7)">older than 7 days</button>
+            <button class="btn btn-primary" ng-click="set_dates(1e4,30)">older than 30 days</button>
+            <button class="btn btn-danger" ng-click="delete()">delete</button>
+            <button class="btn btn-warning" ng-click="clear()">clear</button>
+        </div>
     </div>
-
-
-    <!--button class="btn btn-primary" ng-click="createReport()">Create Report</button-->
-
-
-    <div class="col-sm-12" style="margin-top:10px;">
-        <button class="btn btn-success" ng-click="search()">search</button>
-        <button class="btn btn-danger" ng-click="delete()">delete</button>
-
-        <button class="btn btn-warning" ng-click="clear()">Clear</button>
-
-
-        <button class="btn btn-info" ng-click="createReportCSV()">CSV</button>
-        <button class="btn btn-info" ng-click="createReportExcel()">Excel</button>
-
-        record: {{total_elements | number}}
-    </div>
-    <br><br>
+    
     <div ng-show="showDivMessagge" class="alert" ng-class="success? 'alert-success':'alert-danger' " role="alert">
         {{resultMessage}}
     </div>
 
-    <table class="table table-responsive table-hover">
+    <div class="row">
+        <div class="col-sm-6">Total records found: {{total_elements | number}}</div>
+        <div class="col-sm-6 text-right">
+            Export data: <a ng-click="createReportCSV()">csv</a> | <a ng-click="createReportExcel()">excel</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+    <table class="table table-hover">
         <thead style="text-transform: uppercase;">
         <tr>
-            <th>id</th>
-            <th>created_at</th>
+            <th>msg uuid</th>
+            <th>created</th>
             <th>description</th>
             <th>source</th>
             <th>type</th>
-            <th>bulk_id</th>
-            <th>user_id</th>
+            <th>bulk id</th>
+            <th>user id</th>
+            <th>tenant</th>
             <th></th>
         </tr>
         </thead>
@@ -124,38 +101,41 @@
 
         <tr ng-class="e.error? 'bg-danger':''" ng-repeat="e in events">
 
-            <td>{{e.id}}</td>
+            <td>{{e.msg_uuid}}</td>
             <td>{{e.created_at | date:'dd/MM/yyyy HH:mm:ss'}}</td>
             <td dd-text-collapse dd-text-collapse-max-length="60" dd-text-collapse-text="{{e.description}}"></td>
             <td>{{e.source}}</td>
             <td>{{e.type}}</td>
             <td>{{e.bulk_id}}</td>
-            <td><a href="" ng-click="go('users',{user_id: e.user_id})">{{e.user_id}}</a></td>
-            <td>
-                <button ng-show="e.payload === 0" class="btn btn-primary btn-sm" ng-click="getPayload(e.id)">Payload
-                </button>
-                <!--button ng-show="event.source.includes('unpadmin')" type="button"  class="btn btn-default btn-sm col-sm-2">Download</button-->
-                <button ng-show="e.me_payload" class="btn btn-primary btn-sm" data-toggle="modal"
-                        data-target="#token-modal" ng-click="openModal('Message',e.me_payload,e)">Mex
-                </button>
-                <button ng-show="e.error" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#token-modal"
-                        ng-click="openModal('Error',e.error,e)">Error
-                </button>
+            <td><a href="" ng-click="go('users',{user_id: e.user_id, tenant: e.tenant})">{{e.user_id}}</a></td>
+            <td>{{e.tenant}}</td>
+            <td class="text-right">
+                <div class="btn-group" role="group" aria-label="...">
+                    <button ng-show="e.payload === 0" class="btn btn-default btn-sm" ng-click="getPayload(e.id)" title="payload">
+                        <span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>
+                    </button>
+                    <button ng-show="e.me_payload" class="btn btn-default btn-sm" data-toggle="modal" data-target="#token-modal" ng-click="openModal('Message',e.me_payload,e)" title="show message">
+                        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+                    </button>
+                    <button title="show error" ng-show="e.error" class="btn btn-default btn-sm" data-toggle="modal" data-target="#token-modal" ng-click="openModal('Error',e.error,e)">
+                        <span class="glyphicon glyphicon-alert" aria-hidden="true"></span>
+                    </button>
+                </div>
             </td>
         </tr>
         </tbody>
     </table>
+    </div>
 
     <div class="row">
-        <div class="col-sm-2">
-            <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="choose(1)"><<</button>
-            <button class="btn btn-info btn-sm" ng-show="currentPage > 1" ng-click="prec()"><</button>
+        <div class="col-sm-offset-3 col-sm-2">
+            <button class="btn btn-default btn-sm" ng-show="currentPage > 1" ng-click="choose(1)"><span class="glyphicon glyphicon-fast-backward" aria-hidden="true"></span></button>
+            <button class="btn btn-default btn-sm" ng-show="currentPage > 1" ng-click="prec()"><span class="glyphicon glyphicon-step-backward" aria-hidden="true"></span></button>
         </div>
-        <div class="col-sm-3 text-center">{{currentPage | number}} di {{totalPages | number}}</div>
+        <div class="col-sm-2">Page {{currentPage | number}} of {{totalPages | number}}<br>{{total_elements | number}} record(s)</div>
         <div class="col-sm-2">
-            <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="succ()">></button>
-            <button class="btn btn-info btn-sm" ng-show="currentPage < totalPages" ng-click="choose(totalPages)">>>
-            </button>
+            <button class="btn btn-default btn-sm" ng-show="currentPage < totalPages" ng-click="succ()"><span class="glyphicon glyphicon-step-forward" aria-hidden="true"></span></button>
+            <button class="btn btn-default btn-sm" ng-show="currentPage < totalPages" ng-click="choose(totalPages)"><span class="glyphicon glyphicon-fast-forward" aria-hidden="true"></span></button>
         </div>
     </div>
 

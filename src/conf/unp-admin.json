@@ -9,5 +9,13 @@
   },
   "log4js": {
     "pm2": true
+  },
+  "ioapp": {
+    "api": {
+      "base_url": "https://api.io.pagopa.it/api/v1"
+    },
+    "subscriptions_feed": {
+      "initial_date": "2020-03-20"
+    }
   }
 }

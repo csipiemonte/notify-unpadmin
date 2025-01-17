@@ -1,46 +1,101 @@
 <div class="col-sm-12" ng-controller="server-status">
 
     <div class="container">
-        <table style="font-family: monospace;" class="table table-striped table-responsive table-hover">
-            <thead style="text-transform: uppercase;">
+        <h1>APPs</h1>
+        <table class="table table-striped table-responsive table-hover">
+            <thead >
             <tr>
-                <th>Command</th>
-                <th>Process</th>
+                <th style="text-transform: uppercase;">Process<span class="glyphicon glyphicon-arrow-down"></span> \ Host<span class="glyphicon glyphicon-arrow-right"></span></span></th>
                 <th  ng-repeat="host in hosts">
-                    <div style="cursor: pointer;" ng-click="openHostModal(host)" data-toggle="modal"
-                         data-target="#token-host-modal">{{host}}</div>
-                    <button type="button" class="btn btn-secondary btn-sm"
-                            ng-click="executeOperationOnHost('start',host)">Start
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm"
-                            ng-click="executeOperationOnHost('stop',host)">Stop
-                    </button>
-                </th>
 
-                <!--th ng-repeat="host in hosts">{{host}}
-                </th-->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{host}}<span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" ng-click="openHostModal(host)" data-toggle="modal" data-target="#token-host-modal">view details</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" ng-click="executeOperationOnHost('start',host)">(re)start all</a></li>
+                            <li><a href="#" ng-click="executeOperationOnHost('stop',host)">stop all</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" ng-click="managePm2OnHost('start',host)">start pm2</a></li>
+                        </ul>
+                    </div>
+
+                </th>
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="(p,v) in unp_server_status">
                 <td>
-                    <button type="button" class="btn btn-secondary btn-sm"
-                            ng-click="executeOperationOnProcess('start',p)">Start
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm"
-                            ng-click="executeOperationOnProcess('stop',p)">Stop
-                    </button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{p}}<span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" ng-click="executeOperationOnProcess('start',p)">(re)start all</a></li>
+                            <li><a href="#" ng-click="executeOperationOnProcess('stop',p)">stop all</a></li>
+                        </ul>
+                    </div>
                 </td>
-                <td>{{p}}</td>
                 <td style="cursor: pointer;" ng-click="openModal(p,host,v[host])" data-toggle="modal"
                     data-target="#token-modal" ng-repeat="host in hosts">
-                    <div ng-class="v[host] != '' ?'text-success':'text-danger'">
-                        <span ng-class="v[host] != ''?' glyphicon glyphicon-ok':' glyphicon glyphicon-alert'"></span>
+                    <div ng-class="v[host] != ''  && v[host] !== undefined ?'text-success':'text-danger'">
+                        <span ng-class="v[host] === undefined ? ' glyphicon glyphicon-minus' : (v[host] != '' ?' glyphicon glyphicon-ok':' glyphicon glyphicon-alert')"></span>
                         <span>{{v[host]}}</span>
                     </div>
                 </td>
 
             </tr>
+            </tbody>
+        </table>
+
+        <h1>MBs</h1>
+        <table class="table table-striped table-responsive table-hover">
+            <thead >
+            <tr>
+                <th style="text-transform: uppercase;">Process<span class="glyphicon glyphicon-arrow-down"></span> \ Host<span class="glyphicon glyphicon-arrow-right"></span></span></th>
+                <th  ng-repeat="mbhost in mbhosts">
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            {{mbhost}}<span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" ng-click="openHostModal(mbhost)" data-toggle="modal" data-target="#token-host-modal">view details</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" ng-click="executeOperationOnMBHost('start',mbhost)">(re)start all</a></li>
+                            <li><a href="#" ng-click="executeOperationOnMBHost('stop',mbhost)">stop all</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#" ng-click="managePm2OnHost('start',mbhost)">start pm2</a></li>
+                        </ul>
+                    </div>
+
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="(p,v) in unp_mbserver_status">
+                    <td>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {{p}}<span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="#" ng-click="executeOperationOnMBProcess('start',p)">(re)start all</a></li>
+                                <li><a href="#" ng-click="executeOperationOnMBProcess('stop',p)">stop all</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td style="cursor: pointer;" ng-click="openModal(p,mbhost,v[mbhost])" data-toggle="modal"
+                        data-target="#token-modal" ng-repeat="mbhost in mbhosts">
+                        <div ng-class="v[mbhost] != ''  && v[mbhost] !== undefined ?'text-success':'text-danger'">
+                            <span ng-class="v[mbhost] === undefined ? ' glyphicon glyphicon-minus' : (v[mbhost] != '' ?' glyphicon glyphicon-ok':' glyphicon glyphicon-alert')"></span>
+                            <span>{{v[mbhost]}}</span>
+                        </div>
+                    </td>
+    
+                </tr>
             </tbody>
         </table>
     </div>
@@ -50,7 +105,7 @@
                 <div class="modal-header">
                     <h4 class="modal-title"><br>Host: {{actionProcess.host}}
                         <br>Process: {{actionProcess.process}}
-                        <br>Status: {{actionProcess.pid != ''? 'active':'stopped'}}</h4>
+                        <br>Status: {{actionProcess.pid && actionProcess.pid != ''? 'active':'stopped'}}</h4>
                     <table style="font-family: monospace;" class="table table-striped table-responsive table-hover">
                         <tr ng-repeat="info in process_info_to_see">
                             <td><b>{{info}}</b></td>
@@ -60,13 +115,13 @@
                 </div>
                 <form name="tokenForm">
                     <div class="modal-body">
-                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid != ''"
+                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid === undefined || actionProcess.pid != ''"
                                 ng-click="executeOperation('start')">Start
                         </button>
-                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid == ''"
+                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid == '' || actionProcess.pid === undefined"
                                 ng-click="executeOperation('stop')">Stop Gracefully
                         </button>
-                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid == ''"
+                        <button type="button" class="btn btn-secondary" ng-disabled="actionProcess.pid == '' || actionProcess.pid === undefined"
                                 ng-click="executeOperation('force_stop')">Force kill
                         </button>
                         <!--button type="button" class="btn btn-secondary" ng-click="getLogs()">Logs</button-->

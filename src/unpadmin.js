@@ -9,7 +9,6 @@ var path = require('path');
 
 var express = require('express');
 var session = require('express-session');
-
 var app = express();
 
 var util = require("util");
@@ -17,25 +16,27 @@ var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
 var nodemailer = require('nodemailer');
-
 var transporter = nodemailer.createTransport(conf.mail.server);
-
 transporter.sendMail = util.promisify(transporter.sendMail);
 
 var checkSecurity = require("./utilities/security_checks")(logger);
 
 const fs = require("fs");
 
-app.use(session({secret: 'ssshhhhh'}));
+app.use(session({
+    secret: 'ssshhhhh',
+    resave: false,
+    saveUninitialized: true,
+}));
 
-if(obj.security) app.use(async function(req,res,next){
+if(obj.security) app.use(async function(req,res,next) {
     if(!commons.hasOwnNestedProperty(conf,"security.shibboleth") || req.session.shib_user) return next();
 
     let cf = req.get("Shib-Identita-CodiceFiscale");
     let name = req.get("Shib-Identita-Nome");
     let surname = req.get("Shib-Identita-Cognome");
 
-    try{
+    try {
         let result = await multiple_db.unpadmin.execute("SELECT * FROM users_permissions " +
             "WHERE cf='" + cf + "'");
         if(!result[0] || result[0] === null || result[0].length === 0) throw "user '" + cf + "' not authorized";
@@ -48,13 +49,12 @@ if(obj.security) app.use(async function(req,res,next){
             roles: user.roles
         }
         return next();
-    }catch(e){
+    } catch(e) {
         return next({type: "security_error", status: 401, message: e});
     }
-
 });
 
-
+var dashboardController = require("./controller/dashboard-controller");
 var clientsController = require("./controller/clients-controller");
 var auditController = require("./controller/audit-controller");
 var eventsController = require("./controller/events-controller");
@@ -68,10 +68,11 @@ var tokenController = require("./controller/token-controller");
 var statisticController = require("./controller/statistic-controller");
 var usersPermissionsController = require("./controller/users-permissions-controller");
 var redisController = require("./controller/redis-controller");
-
-
+var tagsController = require("./controller/tags-controller");
+var tenantsController = require("./controller/tenants-controller");
 
 var prefix = "/api/v1";
+app.use(prefix + "/dashboard",(req,res,next) => checkSecurity.checkOperation(req,res,next));
 app.use(prefix + "/clients",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
 app.use(prefix + "/preferences",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
 app.use(prefix + "/audit",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
@@ -85,10 +86,10 @@ app.use(prefix + "/token",(req,res,next) => checkSecurity.checkAdmin(req,res,nex
 app.use(prefix + "/statistic",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
 app.use(prefix + "/user-permissions",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
 app.use(prefix + "/redis",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
+app.use(prefix + "/tags",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
+app.use(prefix + "/tenants",(req,res,next) => checkSecurity.checkAdmin(req,res,next));
 
-
-
-
+app.use(prefix + "/dashboard", dashboardController);
 app.use(prefix + "/clients", clientsController);
 app.use(prefix + "/preferences", preferencesController);
 app.use(prefix + "/audit", auditController);
@@ -96,14 +97,15 @@ app.use(prefix + "/events", eventsController);
 app.use(prefix + "/report/excel", reportExcelController);
 app.use(prefix + "/report/csv", reportCsvController);
 app.use(prefix + "/messages", mexController);
-app.use(prefix + "/messages_events",events_messagesController);
-app.use(prefix + "/status",check_statusController);
-app.use(prefix + "/token",tokenController);
-app.use(prefix + "/statistic",statisticController);
-app.use(prefix + "/users-permissions",usersPermissionsController);
-app.use(prefix + "/redis",redisController);
+app.use(prefix + "/messages_events", events_messagesController);
+app.use(prefix + "/status", check_statusController);
+app.use(prefix + "/token", tokenController);
+app.use(prefix + "/statistic", statisticController);
+app.use(prefix + "/users-permissions", usersPermissionsController);
+app.use(prefix + "/redis", redisController);
+app.use(prefix + "/tags", tagsController);
+app.use(prefix + "/tenants", tenantsController);
 app.use('/', express.static(path.join(__dirname, 'web')));
-
 
 app.get(prefix + '/environment_variables', async function (req, res,next) {
     let env = {};
@@ -125,7 +127,7 @@ app.post(prefix + '/mail/send', async function (req, res,next) {
     logger.debug("trying to send email: ",req.body);
     let mail = req.body;
 
-    try{
+    try {
         let mailOptions = {
             from: mail.sender,
             to: mail.recipient,
@@ -136,33 +138,27 @@ app.post(prefix + '/mail/send', async function (req, res,next) {
         await transporter.sendMail(mailOptions);
         logger.debug("email sent");
         return next({type: "ok", status: 200, message: "Email sent"});
-    }catch(e){
-        logger.error("Error sending mail:",e);
+    } catch(e) {
+        logger.error("Error sending mail: ", JSON.stringify(e));
         return next({type: "system_error", status: 500, message: e});
     }
-
 });
 
 app.get(prefix + '/destinatari', async function (req, res,next) {
     logger.debug("called get destinatari");
-    try{
+    try {
         let destinatari = await fs.readFileSync(process.env.destinatari,'utf8');
         return next({type: "ok", status: 200, message: destinatari.split("\n")});
-    }catch(e){
-        logger.error(e);
+    } catch(e) {
+        logger.error("email recipients file does not exist:", JSON.stringify(e));
         return next({type: "system_error", status: 500, message: e});
     }
-
 });
 
 obj.response_handler(app);
 
-
-
 app.listen(conf.server_port, function () {
-    logger.info("environment: ");
-    logger.info(JSON.stringify(process.env, null, 4));
-    logger.info("configuration: ");
-    logger.info(JSON.stringify(conf, null, 4));
-    logger.info('Express server listening on port: ', conf.server_port);
+    logger.info("environment:", JSON.stringify(process.env, null, 4));
+    logger.info("configuration:", JSON.stringify(conf, null, 4));
+    logger.info('Express server listening on port:', conf.server_port);
 });

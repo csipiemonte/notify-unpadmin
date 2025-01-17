@@ -10,7 +10,13 @@ local function d(o)
   return result
 end
 --local hashset = "mb:coda:queues:messages"
-local hashset = string.gsub("mb:coda:queues:" .. queue_name,":[A-z]+$","")
+local hashset = ""
+if string.match(queue_name, "dead") then
+  hashset = string.gsub("mb:coda:queues:" .. queue_name,":[A-z]+:dead$","") .. ":dead"
+else
+  hashset = string.gsub("mb:coda:queues:" .. queue_name,":[A-z]+$","")
+end
+
 if string.match(queue_name, "to_be_retried") then
      hashset = string.gsub(hashset,":[A-z]+$","")
 end

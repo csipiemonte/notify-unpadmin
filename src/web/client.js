@@ -1,7 +1,5 @@
 app.controller("client", function ($rootScope, $scope, $http, $location, $timeout, jwtHelper, $crypto) {
 
-
-	
     var uuid = $location.search().service_uuid;
     $scope.channelsContent = {};
 
@@ -17,6 +15,15 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         ]
     };
 
+    // available tags list
+    $scope.enforcedTags = [];
+    $scope.tenants = [];
+    // enforced tags expression builder params
+    $scope.nOpenBrackets = 0;
+    $scope.isTagLast = false;
+    $scope.isOperatorLast = false;
+    $scope.isOpenBracketLast = false;
+    $scope.isCloseBracketLast = false;
 
     $scope.token = {
         applications: {},
@@ -28,7 +35,32 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
     getEnvVar();
 
     getServiceAndClient();
+    getTagsList();
+    getTenantsList();
 
+    async function getTagsList() {
+        try {
+            let result = await $http.get("api/v1/tags");
+            $scope.enforcedTags = result.data.map(e => e.name);
+        } catch(error) {
+            $scope.showDivMessagge = true;
+            $scope.success = false;
+            let errorMessage = "Error while getting tags list: " + error.status + " " + error.statusText;
+            $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
+        };
+    }
+
+    async function getTenantsList() {
+        try {
+            let result = await $http.get("api/v1/tenants");
+            $scope.tenants = result.data.map(e => e.name);
+        } catch(error) {
+            $scope.showDivMessagge = true;
+            $scope.success = false;
+            let errorMessage = "Error while getting tenants list: " + error.status + " " + error.statusText;
+            $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
+        };
+    }
 
     async function getEnvVar() {
         try {
@@ -42,7 +74,6 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         }
     }
 
-
     async function getServiceAndClient() {
 
         try {
@@ -52,12 +83,17 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
                 name: '',
                 channels: [],
                 uuid: uuid,
-                tags: []
+                tags: [],
+                mex_enforced_tags: '',
+                tenant: ''
             };
             $scope.service.tags = $scope.service.tags? $scope.service.tags.join(",") : "";
 
             // if is a string it is converted to array
             $scope.service.channels = $scope.service.channels && $scope.service.channels != "" ? $scope.service.channels.split(",") : [];
+
+            $scope.isCloseBracketLast = ($scope.service.mex_enforced_tags && $scope.service.mex_enforced_tags.endsWith(")"));
+            $scope.isTagLast = ($scope.service.mex_enforced_tags && new RegExp("tag:'[a-zA-Z0-9_.-]*'$").test($scope.service.mex_enforced_tags));
 
             $scope.availableChannels = {
                 "push": $scope.service.channels.includes("push"),
@@ -93,7 +129,6 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
                 });
 
                 await $scope.calculateToken();
-
             }
 
         } catch (error) {
@@ -103,7 +138,6 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
             $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
         }
     }
-
 
     $scope.$watch("institutionTags.model", function (tag) {
         if (!$scope.service) return;
@@ -115,12 +149,67 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         $scope.service.tags = tags.join(",");
     })
 
+    $scope.addOpenBracket = function (){
+        if(!$scope.service.mex_enforced_tags) $scope.service.mex_enforced_tags = "";
+        $scope.service.mex_enforced_tags += "(";
+        $scope.nOpenBrackets += 1;
+        $scope.isTagLast = false;
+        $scope.isOperatorLast = false;
+        $scope.isOpenBracketLast = true;
+        $scope.isCloseBracketLast = false;
+    }
+
+    $scope.addCloseBracket = function (){
+        if(!$scope.service.mex_enforced_tags) return;
+        $scope.service.mex_enforced_tags += ")";
+        $scope.nOpenBrackets -= 1;
+        $scope.isTagLast = false;
+        $scope.isOperatorLast = false;
+        $scope.isOpenBracketLast = false;
+        $scope.isCloseBracketLast = true;
+    }
+
+    $scope.addOrOperator = function (){
+        if(!$scope.service.mex_enforced_tags) return;
+        $scope.service.mex_enforced_tags += " OR ";
+        $scope.isTagLast = false;
+        $scope.isOperatorLast = true;
+        $scope.isOpenBracketLast = false;
+        $scope.isCloseBracketLast = false;
+    }
+
+    $scope.addAndOperator = function (){
+        if(!$scope.service.mex_enforced_tags) return;
+        $scope.service.mex_enforced_tags += " AND ";
+        $scope.isTagLast = false;
+        $scope.isOperatorLast = true;
+        $scope.isOpenBracketLast = false;
+        $scope.isCloseBracketLast = false;
+    }
+
+    $scope.selectTag = function (){
+        if(!$scope.service.mex_enforced_tags)
+            $scope.service.mex_enforced_tags = "";
+        $scope.service.mex_enforced_tags += "tag:'" + $scope.selectedEnforcedTags + "'";
+        $scope.isTagLast = true;
+        $scope.isOperatorLast = false;
+        $scope.isOpenBracketLast = false;
+        $scope.isCloseBracketLast = false;
+    }
+
+    $scope.clearEnforcedTags = function(){
+        $scope.service.mex_enforced_tags = null;
+        $scope.nOpenBrackets = 0;
+        $scope.isTagLast = false;
+        $scope.isOperatorLast = false;
+        $scope.isOpenBracketLast = false;
+        $scope.isCloseBracketLast = false;
+    }
 
     $scope.showDivMessagge = false;
 
-
     $scope.saveAndSend = async function () {
-        $scope.save();
+        await $scope.save();
         let listApplications = Object.keys($scope.token_info.applications);
         let mail = "Buongiorno,\n\n" +
             "è stato generato il token per il progetto: :service_name. \n\n" +
@@ -128,9 +217,13 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
             ":token \n\n" +
             "Mittenti delle canalità scelte:\n"
             + "Email: :sender_email\n"
+            + " - username: :sender_email_username\n"
+            + " - password: :sender_email_password\n"
             + "Push: :sender_push\n"
             + "Project Code del Gateway SMS: :sender_sms\n"
-            + "Token IoItalia: :sender_ioitalia\n\n"
+            + " - username: :sender_sms_username\n"
+            + " - password: :sender_sms_password\n"
+            + "Token IOItalia: :sender_ioitalia\n\n"
             + "E' responsabilità del progetto conservare il presente token JWT in una posizione sicura del client fruitore (websapp, app, altro client).\n\n"
             + "L'articolo. 5 del GDPR prevede che i dati debbano essere \"adeguati, pertinenti e limitati a quanto necessario rispetto alle finalità per le quali sono trattati\", non devono essere trattati dati non necessari rispetto alla finalità per la quale vengono raccolti e trattati.\n\n"
             + "Il client che sottomette notifiche deve rispettare il principio di minimizzazione che prevede che i dati utilizzati debbano essere limitati a quelli strettamente necessari rispetto allo scopo, in questo contesto devono essere limitati alle informazioni strettamente necessarie alla notifica di cortesia. La minimizzazione dei dati deve essere prevista fin dalla progettazione del trattamento (privacy by design e by default).\n\n"
@@ -157,8 +250,12 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         mail = mail.replace(':environment', $rootScope.env.ENVIRONMENT);
         mail = mail.replace(':token', $scope.encrypted_token_notify);
         mail = mail.replace(':sender_email', ($scope.availableChannels.email ? $scope.token.preferences.email : "NON ATTIVO"));
+        mail = mail.replace(':sender_email_username', ($scope.availableChannels.email && $scope.token.preferences.email_username ? $scope.token.preferences.email_username : "-"));
+        mail = mail.replace(':sender_email_password', ($scope.availableChannels.email && $scope.token.preferences.email_password ? $scope.token.preferences.email_password : "-"));
         mail = mail.replace(':sender_push', ($scope.availableChannels.push ? $scope.token.preferences.push : "NON ATTIVO"));
-        mail = mail.replace(':sender_sms', ($scope.availableChannels.sms ? JSON.stringify($scope.token.preferences.sms, null, 4) : "NON ATTIVO"));
+        mail = mail.replace(':sender_sms', ($scope.availableChannels.sms && $scope.token.preferences.sms.project_code ? $scope.token.preferences.sms.project_code : "NON ATTIVO"));
+        mail = mail.replace(':sender_sms_username', ($scope.availableChannels.sms && $scope.token.preferences.sms.username ? $scope.token.preferences.sms.username : "-"));
+        mail = mail.replace(':sender_sms_password', ($scope.availableChannels.sms && $scope.token.preferences.sms.password ? $scope.token.preferences.sms.password : "-"));
         mail = mail.replace(':sender_ioitalia', ($scope.availableChannels.io ? $scope.token.preferences.io : "NON ATTIVO"));
 
         let subject = "Token per l'ambiente di " + $scope.environment_variables.ENVIRONMENT + " per il servizio " + $scope.service.name;
@@ -166,7 +263,7 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         $scope.email_to_send = {
             sender: "noreply.notify@csi.it",
             recipient: $scope.client.reference_email,
-            cc: "marco.boero@csi.it",
+            cc: "marco.boero@csi.it,supporto.notify@csi.it",
             subject: subject,
             body: mail
         };
@@ -192,6 +289,7 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
                 throw {data: "Reference email is mandatory"};
             }
             $scope.client.preference_service_name = $scope.service.name;
+            $scope.client.tenant = $scope.service.tenant;
             await $scope.calculateToken();
             $scope.service.channels = Object.keys($scope.availableChannels).filter(e => $scope.availableChannels[e] ? e.toLowerCase() : null);
 
@@ -213,24 +311,25 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
 
             await $http.put("api/v1/clients", client);
             await $http.put("api/v1/preferences/services", srv);
+            $scope.service.tags = $scope.service.tags.join(",");
             $scope.$applyAsync();
             $scope.showDivMessagge = true;
             $scope.success = true;
             $scope.resultMessage = "client and service successfully created";
         } catch (error) {
+            console.log(error);
             $scope.$applyAsync();
             $scope.showDivMessagge = true;
             $scope.success = false;
-            $scope.resultMessage = "Error in client or service creation: " + JSON.stringify(error.data);
+            $scope.resultMessage = "Error in client or service creation: " + error.message;
         }
-
-
     };
 
     $scope.calculateToken = async function () {
 
         $scope.token_info = {
             uuid: uuid,
+            tenant: $scope.service.tenant,
             preference_service_name: $scope.service.name,
             exp: $scope.token.exp.getTime() / 1000,
             iat: $scope.token.iat.getTime() / 1000,
@@ -238,12 +337,14 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
             preferences: {}
         };
 
+        if($scope.token.agent_auth) {
+            $scope.token_info.agent_auth = $scope.token.agent_auth;
+        }
 
         Object.keys($scope.token.applications)
             .forEach(application =>
                 $scope.token_info.applications[application] = Object.keys($scope.token.applications[application])
                     .filter(permission => $scope.token.applications[application][permission]).map(per => per));
-
 
         if (!$scope.token_info.applications.mex || $scope.token_info.applications.mex.length === 0) delete $scope.token_info.applications.mex;
         if (!$scope.token_info.applications.preferences || $scope.token_info.applications.preferences.length === 0) delete $scope.token_info.applications.preferences;
@@ -259,6 +360,11 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         $scope.token_info.preferences = {};
         arrayChannelsChoosed.forEach(e => $scope.token_info.preferences[e] = $scope.token.preferences[e]);
 
+        if($scope.token.preferences.email && $scope.token.preferences.email_username && $scope.token.preferences.email_password){
+            $scope.token_info.preferences.email_username = $scope.token.preferences.email_username;
+            $scope.token_info.preferences.email_password = $scope.token.preferences.email_password;
+        }
+
         try {
             let result = await $http.get("api/v1/clients/" + uuid + "/token", {params: {payload: $scope.token_info}});
             $scope.client.token_notify = result.data ? result.data : "";
@@ -270,10 +376,7 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
             let errorMessage = "Error while getting client: " + error;
             $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
         }
-
-
     }
-
 
     async function cryptToken(token) {
         let crypted_token = await $http.get("api/v1/token/crypt", {params: {token: token}});
@@ -284,7 +387,6 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
         let decrypted_token = await $http.get("api/v1/token/decrypt", {params: {token: token}});
         return decrypted_token.data;
     }
-    
     
     $scope.startUpload = function() {
         var f = document.getElementById('file').files[0],
@@ -339,7 +441,6 @@ app.controller("client", function ($rootScope, $scope, $http, $location, $timeou
     	});
     });
    
-
     $scope.download = async function() {
     	let templateName = $scope.service.name +"-template.html"
     	let result4 = await $http.get("api/v1/clients/template/email/"+templateName);

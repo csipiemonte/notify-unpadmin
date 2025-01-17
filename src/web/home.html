@@ -1,10 +1,157 @@
 <div class="container" ng-controller="home">
 
-    <div class="jumbotron text-center">
-        <h2 ng-show="user !== ''" >Benvenuto <b>{{user.name}} {{user.surname}}</b></h2>
-
-        <h3>Questa è la console di amminstrazione di <i>{{env.ENVIRONMENT}}</i></h3>
+    <h2>System Overview</h2>
+    <div class="row">
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-info elevation-1"><i class="glyphicon glyphicon-cog"></i></span>
+  
+                <div class="info-box-content">
+                  <span class="info-box-text">Services</span>
+                  <span class="info-box-number">
+                    {{services_count}}
+                  </span>
+                </div>
+                <!-- /.info-box-content -->
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-success elevation-1"><i class="glyphicon glyphicon-user"></i></span>
+  
+                <div class="info-box-content">
+                  <span class="info-box-text">Users</span>
+                  <span class="info-box-number">
+                    {{users_count}}
+                  </span>
+                </div>
+                <!-- /.info-box-content -->
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-4">
+            <div class="info-box">
+                <span class="info-box-icon bg-warning elevation-1"><i class="glyphicon glyphicon-envelope"></i></span>
+  
+                <div class="info-box-content">
+                  <span class="info-box-text">Messages <small>(estimate)</small></span>
+                  <span class="info-box-number">
+                    {{messages_count}}
+                  </span>
+                </div>
+                <!-- /.info-box-content -->
+            </div>
+        </div>
     </div>
-
+    <h2>Today Channels Usage</h2>
+    <div class="row">
+      <div class="col-12 col-sm-12 col-md-4">
+        <canvas class="chart chart-doughnut" chart-data="emailData" chart-labels="emailLabels" chart-options="emailOptions" chart-colors="emailLabelsColors"></canvas>
+        <p class="totalLabel">Total: {{emailCount}}</p>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <canvas class="chart chart-doughnut" chart-data="ioData" chart-labels="ioLabels" chart-options="ioOptions" chart-colors="ioLabelsColors"></canvas> 
+        <p class="totalLabel">Total: {{ioCount}}</p>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <canvas class="chart chart-doughnut" chart-data="mexData" chart-labels="mexLabels" chart-options="mexOptions" chart-colors="mexLabelsColors"></canvas> 
+        <p class="totalLabel">Total: {{mexCount}}</p>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <canvas class="chart chart-doughnut" chart-data="pushData" chart-labels="pushLabels" chart-options="pushOptions" chart-colors="pushLabelsColors"></canvas> 
+        <p class="totalLabel">Total: {{pushCount}}</p>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <canvas class="chart chart-doughnut" chart-data="smsData" chart-labels="smsLabels" chart-options="smsOptions" chart-colors="smsLabelsColors"></canvas> 
+        <p class="totalLabel">Total: {{smsCount}}</p>
+      </div>
+    </div>
+    <h2>Today Top Senders per Channel</h2>
+    <div class="row">
+      <div class="col-12 col-sm-12 col-md-4">
+        <p class="top5SendersTitle">emailconsumer</p>
+        <table class="table table-striped">
+            <thead>
+              <tr>
+                  <th>Service</th>
+                  <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="value in consumer_sender | filter:{ source:'emailconsumer' } | limitTo: 5">
+                  <td>{{value.sender}}</td>
+                  <td>{{value.count}}</td>
+              </tr>
+            </tbody>
+        </table>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <p class="top5SendersTitle">ioconsumer</p>
+        <table class="table table-striped table-responsive table-hover">
+            <thead>
+              <tr>
+                  <th>Service</th>
+                  <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="value in consumer_sender | filter:{ source:'ioconsumer' } | limitTo: 5">
+                  <td>{{value.sender}}</td>
+                  <td>{{value.count}}</td>
+              </tr>
+            </tbody>
+        </table>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <p class="top5SendersTitle">mexconsumer</p>
+        <table class="table table-striped table-responsive table-hover">
+            <thead>
+              <tr>
+                  <th>Service</th>
+                  <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="value in consumer_sender | filter:{ source:'mexconsumer' } | limitTo: 5">
+                  <td>{{value.sender}}</td>
+                  <td>{{value.count}}</td>
+              </tr>
+            </tbody>
+        </table>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <p class="top5SendersTitle">pushconsumer</p>
+        <table class="table table-striped table-responsive table-hover">
+            <thead>
+              <tr>
+                  <th>Service</th>
+                  <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="value in consumer_sender | filter:{ source:'pushconsumer' } | limitTo: 5">
+                  <td>{{value.sender}}</td>
+                  <td>{{value.count}}</td>
+              </tr>
+            </tbody>
+        </table>
+      </div>
+      <div class="col-12 col-sm-12 col-md-4">
+        <p class="top5SendersTitle">smsconsumer</p>
+        <table class="table table-striped table-responsive table-hover">
+            <thead>
+              <tr>
+                  <th>Service</th>
+                  <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="value in consumer_sender | filter:{ source:'smsconsumer' } | limitTo: 5">
+                  <td>{{value.sender}}</td>
+                  <td>{{value.count}}</td>
+              </tr>
+            </tbody>
+        </table>
+      </div>
+    </div>
 
 </div>

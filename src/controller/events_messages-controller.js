@@ -13,7 +13,7 @@ var bodyParser = require('body-parser');
 router.use(bodyParser.json());
 
 router.get('', async function (req, res,next) {
-    logger.debug("called messages_events/ filters:",req.query.filter);
+    logger.debug("called GET /messages_events, filter:", req.query.filter);
     let filter = req.query.filter ? req.query.filter : {};
 
     try{
@@ -29,6 +29,5 @@ router.get('', async function (req, res,next) {
         return next({type: "db_error", status: 500, message: err});
     }
 });
-
 
 module.exports = router;

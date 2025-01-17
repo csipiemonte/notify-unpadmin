@@ -15,21 +15,48 @@
                 </tr>
             </table>
         </div>
-        <div class="row">
-            <div class=" col-md-3">
-                <table style="font-family: monospace;" class="table table-responsive table-hover">
-                    <caption>Hashmaps</caption>
-                    <tr ng-repeat="(queue_name, q) in maps">
-                        <td width="1%">
-                            {{queue_name}}
-                        </td>
-                        <td>
-                            <a href="" ng-click="showMap(queue_name)" data-target="#hm-modal" data-toggle="modal">{{q}}</a>
-                        </td>
-                    </tr>
-                </table>
-            </div>
+    </div>
+    <div class="row">
+        <div class=" col-md-3">
+            <table style="font-family: monospace;" class="table table-responsive table-hover">
+                <caption>Hashmaps</caption>
+                <tr ng-repeat="(queue_name, q) in maps">
+                    <td width="1%">
+                        {{queue_name}}
+                    </td>
+                    <td>
+                        <a href="" ng-click="showMap(queue_name)" data-target="#hm-modal" data-toggle="modal">{{q}}</a>
+                    </td>
+                </tr>
+            </table>
         </div>
+        <div class=" col-md-3">
+            <table style="font-family: monospace;" class="table table-responsive table-hover">
+                <caption>Dead Hashmaps</caption>
+                <tr ng-repeat="(queue_name, q) in dead_maps">
+                    <td width="1%">
+                        {{queue_name}}
+                    </td>
+                    <td>
+                        <a href="" ng-click="showMap(queue_name)" data-target="#hm-modal" data-toggle="modal">{{q}}</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class=" col-md-3">
+            <table style="font-family: monospace;" class="table table-responsive table-hover">
+                <caption>Retries Hashmaps</caption>
+                <tr ng-repeat="(queue_name, q) in retries_maps">
+                    <td width="1%">
+                        {{queue_name}}
+                    </td>
+                    <td>
+                        <a href="" ng-click="showMap(queue_name)" data-target="#hm-modal" data-toggle="modal">{{q}}</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
 
         <div>
             <h3>Redis Commander</h3>
@@ -209,6 +236,5 @@
                         <button class="btn btn-primary " data-dismiss="modal" ng-click="sendMail()">Send</button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div>      
     </div>

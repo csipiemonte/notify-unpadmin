@@ -45,6 +45,10 @@ app.controller("audit", function ($scope, $http,usSpinnerService,$timeout) {
         $scope.app_names = reply.data;
     });
 
+    $http.get("api/v1/tenants").then((result) => {
+        $scope.tenants = result.data.map(e => e.name);
+    });
+
     $scope.search = function () {
         $scope.params.filter = semplify($scope.params.filter);
         $scope.params.sort = "-id";
@@ -54,8 +58,8 @@ app.controller("audit", function ($scope, $http,usSpinnerService,$timeout) {
         if (params.filter.timestamp) {
             params.filter.timestamp.gte = new Date(params.filter.timestamp.gte);
             params.filter.timestamp.lte = new Date(params.filter.timestamp.lte);
-            params.filter.timestamp.gte.setMinutes(params.filter.timestamp.gte.getMinutes() - params.filter.timestamp.gte.getTimezoneOffset());
-            params.filter.timestamp.lte.setMinutes(params.filter.timestamp.lte.getMinutes() - params.filter.timestamp.lte.getTimezoneOffset());
+            // params.filter.timestamp.gte.setMinutes(params.filter.timestamp.gte.getMinutes() - params.filter.timestamp.gte.getTimezoneOffset());
+            // params.filter.timestamp.lte.setMinutes(params.filter.timestamp.lte.getMinutes() - params.filter.timestamp.lte.getTimezoneOffset());
         }
 
 

@@ -7,7 +7,7 @@ app.controller("utilities", function ($rootScope, $scope, $http, $location, $tim
         $scope.showDivMessagge = true;
         $scope.success = false;
         let errorMessage = "Error while get environment variables: " + error.data;
-        $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
+        $scope.resultMessage = errorMessage;
     }));
 
     $scope.decryptAES = function(){
@@ -25,12 +25,13 @@ app.controller("utilities", function ($rootScope, $scope, $http, $location, $tim
                 $scope.token.applications[application] = {};
                 applications[application].forEach(permission => $scope.token.applications[application][permission] = true)
             })
+            $scope.showDivMessagge = false;
 
         }), ((error) => {
             $scope.showDivMessagge = true;
             $scope.success = false;
-            let errorMessage = "Error while decrypt, probabile password errata: " + JSON.stringify(error);
-            $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
+            let errorMessage = "Error while decrypting token (maybe, wrong password?):<br>" + JSON.stringify(error);
+            $scope.resultMessage = errorMessage;
         }));
     }
 
@@ -49,12 +50,13 @@ app.controller("utilities", function ($rootScope, $scope, $http, $location, $tim
                 $scope.token.applications[application] = {};
                 applications[application].forEach(permission => $scope.token.applications[application][permission] = true)
             })
+            $scope.showDivMessagge = false;
 
         }), ((error) => {
             $scope.showDivMessagge = true;
             $scope.success = false;
-            let errorMessage = "Error while decrypt, probabile password errata: " + JSON.stringify(error);
-            $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
+            let errorMessage = "Error while decrypting token (maybe, wrong password?):<br>" + JSON.stringify(error);
+            $scope.resultMessage = errorMessage;
         }));
     }
 
@@ -62,11 +64,12 @@ app.controller("utilities", function ($rootScope, $scope, $http, $location, $tim
         $scope.token = "";
         $http.put("api/v1/token/crypt_utility", {token: $scope.token_notify,password: $scope.password}).then((result => {
             $scope.token_notify_jwt = result.data;
+            $scope.showDivMessagge = false;
         }), ((error) => {
             $scope.showDivMessagge = true;
             $scope.success = false;
-            let errorMessage = "Error while crypt, probabile password errata: " + JSON.stringify(error);
-            $scope.resultMessage = $scope.resultMessage ? $scope.resultMessage + "<br/>" + errorMessage : errorMessage;
+            let errorMessage = "Error while encrypting token (maybe, wrong password?):<br>" + JSON.stringify(error);
+            $scope.resultMessage = errorMessage;
         }));
     }
 
